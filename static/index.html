@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TRINETRA // OSINT-C2 Sentinel - Border Threat Early Warning</title>
+  <meta name="description" content="TRINETRA Software-First Context-Aware Border Early-Warning Command & Control System">
+
+  <!-- Modern Typography -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+
+  <!-- Leaflet Tactical Mapping -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+
+  <!-- Custom Tactical Stylesheet -->
+  <link rel="stylesheet" href="/static/style.css">
+</head>
+<body>
+
+<div id="app-container">
+
+  <!-- TOP COMMAND BAR -->
+  <header class="top-header">
+    <div class="brand-section">
+      <div class="brand-logo-mark">TN</div>
+      <div class="brand-title">
+        <div class="brand-name">TRINETRA <span style="color: var(--cyan-tactical); font-weight:400;">// SENTINEL C2</span></div>
+        <div class="brand-tag">OSINT CONTEXT ENGINE · DEMO v1.0</div>
+      </div>
+    </div>
+
+    <!-- Live Telemetry Coordinates -->
+    <div class="system-telemetry">
+      <div class="telemetry-item">
+        <span class="status-dot"></span>
+        <span class="telemetry-label">C2 SYSTEM:</span>
+        <span class="telemetry-value" id="c2-status-text">ONLINE (ACTIVE)</span>
+      </div>
+      <div class="telemetry-item">
+        <span class="telemetry-label">SECTOR:</span>
+        <span class="telemetry-value">Z1-KALI BASIN</span>
+      </div>
+      <div class="telemetry-item">
+        <span class="telemetry-label">LAT/LON:</span>
+        <span class="telemetry-value">26.8512° N, 84.2321° E</span>
+      </div>
+      <div class="telemetry-item">
+        <span class="telemetry-label">SCENARIO TIME:</span>
+        <span class="telemetry-value" id="telemetry-clock">02:40:00 IST</span>
+      </div>
+    </div>
+
+    <div class="header-actions">
+      <div class="truthfulness-banner" title="Honesty Safeguard (PRD FR-27)">
+        ● SIMULATED SENSORS · LIVE CONTEXT ENGINE
+      </div>
+      <button class="tactical-btn" id="btn-open-audit" title="View Append-Only Audit Log">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg>
+        AUDIT TRAIL
+      </button>
+      <button class="tactical-btn danger" id="btn-reset-demo" title="Clear All Incidents and Restore Baseline">
+        <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path><path d="M3 3v5h5"></path></svg>
+        RESET
+      </button>
+    </div>
+  </header>
+
+  <!-- MAIN WORKSPACE -->
+  <main class="workspace-grid">
+
+    <!-- LEFT SIDEBAR: OSINT INTEL QUEUE -->
+    <aside class="sidebar-panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+          THREAT QUEUE (<span id="alert-count-total">0</span>)
+        </div>
+        <span class="telemetry-value" id="ws-indicator" style="font-size:10px; font-family:var(--font-mono);">SYNCED</span>
+      </div>
+
+      <!-- Filter Chips -->
+      <div class="filter-bar">
+        <button class="filter-chip active" data-filter="all">ALL</button>
+        <button class="filter-chip" data-filter="high">HIGH (70+)</button>
+        <button class="filter-chip" data-filter="review">REVIEW (40-69)</button>
+        <button class="filter-chip" data-filter="log">LOG (&lt;40)</button>
+      </div>
+
+      <!-- Alert Cards List -->
+      <div class="alert-queue-list" id="alert-list-container">
+        <div class="empty-state">
+          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 14 14"></polyline></svg>
+          <div>SECTOR QUIET</div>
+          <div style="font-size:11px;">Run a scenario below to inject sensor activity.</div>
+        </div>
+      </div>
+
+      <!-- Real-Time Ground Sensor Telemetry Ticker -->
+      <div class="sensor-stream-ticker">
+        <div class="ticker-header">
+          <span>LIVE SENSOR TELEMETRY</span>
+          <span style="color:var(--emerald-tactical)">STREAM ACTIVE</span>
+        </div>
+        <div class="ticker-logs" id="ticker-log-box">
+          <div class="ticker-line"><span class="ticker-time">00:00:01</span> <span class="ticker-node">SYS</span> Baseline monitoring steady</div>
+        </div>
+      </div>
+    </aside>
+
+    <!-- CENTER: TACTICAL LEAFLET MAP STAGE -->
+    <section class="map-stage-container">
+      <div id="leaflet-map"></div>
+
+      <!-- TOP MAP HUD: SATELLITE / MAP VIEW TOGGLE (USER CORE REQUIREMENT) -->
+      <div class="map-hud-top">
+        <div class="map-view-switcher" role="group" aria-label="Base Map Switcher">
+          <button class="switch-btn active" id="btn-map-view" title="Tactical Vector Map (Dark Matter)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="1 6 1 22 8 18 16 22 23 18 23 2 16 6 8 2 1 6"></polygon><line x1="8" y1="2" x2="8" y2="18"></line><line x1="16" y1="6" x2="16" y2="22"></line></svg>
+            MAP VIEW
+          </button>
+          <button class="switch-btn" id="btn-satellite-view" title="High-Resolution Satellite Imagery (Esri World Imagery)">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="2" y1="12" x2="22" y2="12"></line><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+            SATELLITE VIEW
+          </button>
+        </div>
+
+        <div class="map-hud-coordinates">
+          CURSOR: <span id="mouse-coords">26.8512° N, 84.2321° E</span>
+        </div>
+      </div>
+
+      <!-- LAYER TOGGLES HUD -->
+      <div class="layer-toggles-hud">
+        <div style="font-weight:700; color:var(--cyan-tactical); margin-bottom:2px;">TACTICAL LAYERS</div>
+        <label class="layer-toggle-item">
+          <input type="checkbox" id="layer-chk-geofences" checked> Geofence Corridors
+        </label>
+        <label class="layer-toggle-item">
+          <input type="checkbox" id="layer-chk-nodes" checked> Sensor Nodes (N1-N4)
+        </label>
+        <label class="layer-toggle-item">
+          <input type="checkbox" id="layer-chk-bop" checked> Outpost & Radius (BOP-1)
+        </label>
+      </div>
+    </section>
+
+    <!-- RIGHT INSPECTOR PANEL: EXPLAINABLE THREAT INTEL -->
+    <aside class="inspector-panel" id="inspector-panel">
+      <div class="panel-header">
+        <div class="panel-title">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          TACTICAL INTEL & EXPLAINABILITY
+        </div>
+        <span class="telemetry-value" id="inspector-alert-id" style="font-size:11px;">NO TARGET</span>
+      </div>
+
+      <div class="inspector-content" id="inspector-body">
+        <!-- Rendered dynamically by app.js -->
+        <div class="empty-state">
+          <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+          <div>STANDBY MODE</div>
+          <div style="font-size:11px;">Select an alert from the queue or launch a demo scenario to inspect explainable AI reasoning.</div>
+        </div>
+      </div>
+    </aside>
+
+  </main>
+
+  <!-- BOTTOM COMMAND HUD / SCENARIO RUNNER BAR -->
+  <footer class="bottom-control-bar">
+    <div class="scenario-launcher-group">
+      <span class="scenario-group-label">SCENARIO RUNNER:</span>
+      <button class="scenario-btn danger" data-scenario="intrusion" title="Off-route night penetration (Score 95 -> HIGH ALERT)">
+        <span>🚨</span> NIGHT INTRUSION
+      </button>
+      <button class="scenario-btn success" data-scenario="routine" title="Daytime market corridor crossing (Score 25 -> LOG ONLY)">
+        <span>🚶</span> MARKET CROSSING
+      </button>
+      <button class="scenario-btn warning" data-scenario="animal" title="Stray livestock suppression (Score 15 -> LOG ONLY)">
+        <span>🐄</span> STRAY ANIMAL
+      </button>
+      <button class="scenario-btn" data-scenario="single_sensor" title="Lone vibration sensor trigger capped at 65 (REVIEW ONLY)">
+        <span>⚠️</span> SINGLE SENSOR PROBE
+      </button>
+      <button class="scenario-btn" data-scenario="offline" title="Node Z1-N4 telemetry dropout">
+        <span>📡</span> NODE OFFLINE
+      </button>
+    </div>
+
+    <div class="bottom-controls-right">
+      <label class="telemetry-item" style="cursor:pointer;" title="Sound Alert on High Threat">
+        <input type="checkbox" id="chk-audio-alert" checked style="accent-color:var(--cyan-tactical); margin-right:4px;">
+        <span class="telemetry-label">AUDIO ALARM</span>
+      </label>
+      <div class="telemetry-item">
+        <span class="telemetry-label">SPEED:</span>
+        <select id="sel-scenario-speed" style="background:transparent; border:none; color:var(--cyan-tactical); font-family:var(--font-mono); font-size:11px; cursor:pointer; outline:none;">
+          <option value="1.0" style="background:#0b111e;">1x NORMAL</option>
+          <option value="2.0" style="background:#0b111e;">2x RAPID</option>
+          <option value="4.0" style="background:#0b111e;">4x SPEED</option>
+        </select>
+      </div>
+    </div>
+  </footer>
+
+</div>
+
+<!-- DRONE RECON MODAL -->
+<div class="modal-overlay" id="modal-drone">
+  <div class="modal-box">
+    <div class="modal-header">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="color:var(--purple-tactical); font-weight:800; font-family:var(--font-mono);">[UAV RECON]</span>
+        <span style="font-family:var(--font-mono); font-size:12px; color:#fff;">AUTONOMOUS DRONE FLIGHT FEED · SECTOR Z1</span>
+      </div>
+      <button class="tactical-btn" id="btn-close-drone-modal">CLOSE [ESC]</button>
+    </div>
+    <div class="modal-body">
+      <div class="drone-hud-viewport">
+        <img src="/static/assets/drone_recon.jpg" alt="Thermal Drone Reconnaissance Footage" class="drone-feed-img">
+        <div class="drone-telemetry-hud">
+          <div style="display:flex; justify-content:space-between;">
+            <div>ALT: 120m AGL · HDG: 142° SE · PITCH: -45°</div>
+            <div>THERMAL: WHITE-HOT · ZOOM: 2.4x · BATT: 82%</div>
+          </div>
+          <div class="drone-hud-reticle"></div>
+          <div style="display:flex; justify-content:space-between;">
+            <div>TARGET GEOFENCE: RESTRICTED RIVERBED [LOCKED]</div>
+            <div style="color:var(--emerald-tactical);">FEED: LIVE TELESCOPIC FLIR (SIMULATED)</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- AUDIT LOG MODAL -->
+<div class="modal-overlay" id="modal-audit">
+  <div class="modal-box" style="max-width: 900px;">
+    <div class="modal-header">
+      <div style="display:flex; align-items:center; gap:8px;">
+        <span style="color:var(--cyan-tactical); font-weight:800; font-family:var(--font-mono);">[AUDIT TRAIL]</span>
+        <span style="font-family:var(--font-mono); font-size:12px; color:#fff;">APPEND-ONLY C2 DECISION & SENSOR RECORD</span>
+      </div>
+      <button class="tactical-btn" id="btn-close-audit-modal">CLOSE [ESC]</button>
+    </div>
+    <div class="modal-body">
+      <table class="audit-table">
+        <thead>
+          <tr>
+            <th>TIMESTAMP</th>
+            <th>CATEGORY</th>
+            <th>ACTOR</th>
+            <th>EVENT SUMMARY</th>
+          </tr>
+        </thead>
+        <tbody id="audit-table-body">
+          <!-- Filled by app.js -->
+        </tbody>
+      </table>
+    </div>
+  </div>
+</div>
+
+<script src="/static/app.js"></script>
+</body>
+</html>

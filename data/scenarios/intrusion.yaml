@@ -1,0 +1,42 @@
+name: "Night Intrusion on Forest Track"
+description: "Coordinated stealth movement off-route at 02:40 AM with multi-sensor agreement heading toward interior"
+clock: "2026-10-12T02:40:00+05:30"
+events:
+  - at: 0.0
+    node: "Z1-N3"
+    type: "vibration"
+    label: "footstep"
+    confidence: 0.88
+    lat: 26.8542
+    lon: 84.2288
+    source: "sim"
+  - at: 1.2
+    node: "Z1-N3"
+    type: "pir"
+    label: "motion"
+    confidence: 0.94
+    lat: 26.8542
+    lon: 84.2288
+    source: "sim"
+  - at: 2.8
+    node: "Z1-N3"
+    type: "vision"
+    label: "person"
+    count: 3
+    confidence: 0.87
+    heading_deg: 195
+    lat: 26.8540
+    lon: 84.2290
+    source: "sim"
+    snapshot: "data/snapshots/thermal_intrusion_group.jpg"
+  - at: 4.0
+    node: "Z1-N3"
+    type: "vision"
+    label: "motorcycle"
+    count: 1
+    confidence: 0.81
+    heading_deg: 190
+    lat: 26.8538
+    lon: 84.2292
+    source: "sim"
+    snapshot: "data/snapshots/thermal_vehicle.jpg"

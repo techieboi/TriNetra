@@ -1,0 +1,31 @@
+name: "Stray Wildlife / Animal Movement"
+description: "Night animal movement near forest edge; classified as cow/livestock with low threat suppression"
+clock: "2026-10-12T23:30:00+05:30"
+events:
+  - at: 0.0
+    node: "Z1-N3"
+    type: "vibration"
+    label: "animal_hoof"
+    confidence: 0.77
+    lat: 26.8538
+    lon: 84.2292
+    source: "sim"
+  - at: 1.0
+    node: "Z1-N3"
+    type: "pir"
+    label: "motion"
+    confidence: 0.88
+    lat: 26.8538
+    lon: 84.2292
+    source: "sim"
+  - at: 2.2
+    node: "Z1-N3"
+    type: "vision"
+    label: "cow"
+    count: 1
+    confidence: 0.92
+    heading_deg: 45
+    lat: 26.8540
+    lon: 84.2290
+    source: "sim"
+    snapshot: "data/snapshots/thermal_livestock.jpg"

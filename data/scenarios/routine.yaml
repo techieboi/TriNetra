@@ -1,0 +1,31 @@
+name: "Routine Market Crossing (Daytime)"
+description: "Authorized civilian movement along marked crossing corridor during open market hours"
+clock: "2026-10-12T10:15:00+05:30"
+events:
+  - at: 0.0
+    node: "Z1-N2"
+    type: "vibration"
+    label: "footstep"
+    confidence: 0.82
+    lat: 26.8488
+    lon: 84.2352
+    source: "sim"
+  - at: 1.2
+    node: "Z1-N2"
+    type: "pir"
+    label: "motion"
+    confidence: 0.95
+    lat: 26.8488
+    lon: 84.2352
+    source: "sim"
+  - at: 2.5
+    node: "Z1-N2"
+    type: "vision"
+    label: "person"
+    count: 4
+    confidence: 0.89
+    heading_deg: 90
+    lat: 26.8490
+    lon: 84.2350
+    source: "sim"
+    snapshot: "data/snapshots/market_pedestrians.jpg"
