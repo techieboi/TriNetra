@@ -1,116 +1,127 @@
 {
-  "zone_id": "Z1",
-  "name": "Sector 4 - Kali-Gandak Border Basin",
-  "description": "Fictional Open-Border Monitoring Sector Z1 (Software-First Demo Sandbox)",
+  "zone_id": "G2",
+  "name": "G2 · Gandak",
+  "description": "Border Sensor Fusion Sector G2 · Gandak",
   "bounds": {
-    "min_lat": 26.8400,
-    "max_lat": 26.8620,
-    "min_lon": 84.2180,
-    "max_lon": 84.2460
+    "min_lat": 26.8380,
+    "max_lat": 26.8640,
+    "min_lon": 84.2150,
+    "max_lon": 84.2500
   },
   "center": {
     "lat": 26.8512,
     "lon": 84.2321,
-    "zoom": 15
+    "zoom": 14
   },
+  "international_border": [
+    [26.8590, 84.2150],
+    [26.8575, 84.2260],
+    [26.8550, 84.2350],
+    [26.8525, 84.2480]
+  ],
   "nodes": [
     {
-      "id": "Z1-N1",
-      "name": "Alpha Node (Live Post)",
-      "lat": 26.8512,
-      "lon": 84.2321,
-      "status": "online",
-      "battery": 94,
-      "sensors": ["vision", "vibration", "pir"],
-      "source_type": "live",
-      "last_heartbeat_s": 2
-    },
-    {
-      "id": "Z1-N2",
-      "name": "Bravo Node (Market Approach)",
-      "lat": 26.8485,
-      "lon": 84.2355,
-      "status": "online",
-      "battery": 88,
-      "sensors": ["vibration", "pir"],
-      "source_type": "sim",
-      "last_heartbeat_s": 5
-    },
-    {
-      "id": "Z1-N3",
-      "name": "Charlie Node (Forest Flank)",
-      "lat": 26.8540,
-      "lon": 84.2290,
+      "id": "N1",
+      "name": "N1 · Core Patrol Node",
+      "lat": 26.8505,
+      "lon": 84.2285,
       "status": "online",
       "battery": 91,
-      "sensors": ["vision", "vibration", "pir"],
-      "source_type": "sim",
-      "last_heartbeat_s": 3
+      "signal_dbm": -71,
+      "seen_s": "1 s",
+      "sensors": ["seismic", "pir"],
+      "source_type": "sim"
     },
     {
-      "id": "Z1-N4",
-      "name": "Delta Node (Dry Riverbed)",
-      "lat": 26.8565,
-      "lon": 84.2370,
+      "id": "N2",
+      "name": "N2 · Trail Approach",
+      "lat": 26.8480,
+      "lon": 84.2315,
       "status": "online",
-      "battery": 76,
-      "sensors": ["vibration", "pir"],
-      "source_type": "sim",
-      "last_heartbeat_s": 6
+      "battery": 84,
+      "signal_dbm": -76,
+      "seen_s": "1 s",
+      "sensors": ["seismic", "pir"],
+      "source_type": "sim"
+    },
+    {
+      "id": "N3",
+      "name": "N3 · CAM 07 (Thermal Ridge)",
+      "lat": 26.8540,
+      "lon": 84.2270,
+      "status": "online",
+      "battery": 67,
+      "signal_dbm": -82,
+      "seen_s": "2 s",
+      "camera": "CAM 07",
+      "sensors": ["thermal", "seismic", "pir"],
+      "source_type": "sim"
+    },
+    {
+      "id": "N4",
+      "name": "N4 · CAM 12/13 (Dry Riverbed)",
+      "lat": 26.8530,
+      "lon": 84.2360,
+      "status": "warning",
+      "battery": 23,
+      "signal_dbm": -88,
+      "seen_s": "4 s",
+      "camera": "CAM 12",
+      "sensors": ["seismic", "pir"],
+      "source_type": "sim"
     }
   ],
   "bops": [
     {
       "id": "BOP-1",
-      "name": "BOP Sutlej (Forward HQ)",
-      "lat": 26.8430,
-      "lon": 84.2380,
-      "contact": "VHF-CH14 // QRT Alpha",
-      "personnel": 18,
+      "name": "BOP-1 (Forward)",
+      "lat": 26.8440,
+      "lon": 84.2335,
+      "contact": "VHF-CH14 // QRT Alpha (6 pax)",
       "status": "ready"
     }
   ],
   "geofences": [
     {
-      "id": "geo-market-crossing",
-      "name": "Authorized Market Crossing Corridor",
-      "kind": "crossing_route",
-      "active_hours": "08:00 - 18:00",
-      "risk_modifier": -30,
-      "color": "#10b981",
-      "polygon": [
-        [26.8475, 84.2330],
-        [26.8485, 84.2375],
-        [26.8505, 84.2370],
-        [26.8495, 84.2325]
-      ]
-    },
-    {
-      "id": "geo-restricted-riverbed",
-      "name": "Restricted Zero-Line Riverbed",
-      "kind": "restricted",
-      "active_hours": "24/7 STRICT ZERO-ACCESS",
-      "risk_modifier": 15,
-      "color": "#ef4444",
-      "polygon": [
-        [26.8550, 84.2330],
-        [26.8585, 84.2355],
-        [26.8575, 84.2415],
-        [26.8535, 84.2385]
-      ]
-    },
-    {
-      "id": "geo-forest-track",
-      "name": "Unmonitored Forest Flank Track",
+      "id": "geo-zone-a",
+      "name": "Zone A (Forest Track Sector)",
       "kind": "forest_track",
       "active_hours": "HIGH NIGHT PROBING ZONE",
       "risk_modifier": 25,
       "color": "#f59e0b",
       "polygon": [
-        [26.8520, 84.2260],
-        [26.8560, 84.2270],
-        [26.8550, 84.2315],
-        [26.8510, 84.2300]
+        [26.8510, 84.2220],
+        [26.8565, 84.2240],
+        [26.8555, 84.2305],
+        [26.8500, 84.2290]
+      ]
+    },
+    {
+      "id": "geo-zone-b",
+      "name": "Zone B (Zero-Line Riverbed)",
+      "kind": "restricted",
+      "active_hours": "RESTRICTED ZERO-ACCESS",
+      "risk_modifier": 15,
+      "color": "#ef4444",
+      "polygon": [
+        [26.8510, 84.2330],
+        [26.8550, 84.2340],
+        [26.8540, 84.2410],
+        [26.8495, 84.2395]
+      ]
+    },
+    {
+      "id": "geo-market-crossing",
+      "name": "Authorised Crossing Route",
+      "kind": "crossing_route",
+      "active_hours": "08:00 - 18:00",
+      "risk_modifier": -30,
+      "color": "#10b981",
+      "polygon": [
+        [26.8465, 84.2290],
+        [26.8495, 84.2305],
+        [26.8485, 84.2345],
+        [26.8455, 84.2330]
       ]
     }
   ]

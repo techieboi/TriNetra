@@ -51,10 +51,14 @@ async def engine_loop():
             event: Event = await bus.queue.get()
             store.save_event(event)
 
-            # Broadcast raw event to dashboard
+            # Broadcast raw event & sensor logs to dashboard
             await ws_manager.broadcast({
                 "type": "event",
                 "data": event.model_dump()
+            })
+            await ws_manager.broadcast({
+                "type": "sensor_logs",
+                "data": store.sensor_logs
             })
 
             # Check if event is heartbeat timeout
@@ -249,7 +253,8 @@ async def websocket_endpoint(websocket: WebSocket):
             "nodes": store.node_status,
             "alerts": [a.model_dump() for a in store.alerts.values()],
             "events": [e.model_dump() for e in store.events[-20:]],
-            "audit": [au.model_dump() for au in store.audit_log[-30:]]
+            "audit": [au.model_dump() for au in store.audit_log[-30:]],
+            "sensor_logs": store.sensor_logs
         })
         while True:
             # Keep connection alive & handle incoming pings
