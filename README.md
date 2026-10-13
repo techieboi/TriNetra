@@ -1,7 +1,8 @@
 # TRINETRA // OSINT-C2 Sentinel
 
 > **Context-Aware Border Early-Warning Command & Control System**  
-> *Software-First Demo v1.0 — Inspired by Defense Intelligence & OSINT Project Osiris UI*
+> *Software-First Demo v1.0 — Inspired by Defense Intelligence & OSINT Project Osiris UI*  
+> 📄 **[Product Requirements Document (PRD.md)](PRD.md)** · 📋 **[Software-First Build Plan](TRINETRA%20—%20Software-First%20Demo%20Build%20Plan.md)**
 
 ---
 
@@ -158,6 +159,7 @@ TriNetra/
 │   └── assets/                 # FLIR thermal and aerial drone reconnaissance imagery
 ├── requirements.txt            # Python dependencies
 ├── .gitignore                  # Git ignore rules (.venv, caches, etc.)
+├── PRD.md                      # Complete Product Requirements Document (v1.0)
 └── README.md                   # Project documentation
 ```
 
