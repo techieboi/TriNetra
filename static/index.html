@@ -9,7 +9,7 @@
   <!-- Typography -->
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 
   <!-- Leaflet Tactical Mapping -->
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
@@ -22,7 +22,7 @@
 
 <div id="c2-layout">
 
-  <!-- HEADER -->
+  <!-- TOP HEADER -->
   <header class="c2-header">
     <div class="header-left">
       <div class="logo-group">
@@ -42,13 +42,13 @@
 
       <div class="meta-item">
         <span class="meta-label">Local time</span>
-        <span class="meta-val" id="clock-ist">20:14:32 IST</span>
+        <span class="meta-val" id="clock-ist">22:37:09 IST</span>
       </div>
 
       <div class="meta-item">
         <span class="meta-label">Link</span>
-        <span class="meta-val link-status">
-          <span class="link-dot"></span> Online · synced 2 s ago
+        <span class="meta-val link-status" id="header-link-status">
+          <span class="link-dot"></span> <span id="link-status-text">Online · synced 2 s ago</span>
         </span>
       </div>
     </div>
@@ -57,7 +57,7 @@
       <button class="c2-btn-ghost" id="btn-audit-trail">Audit trail</button>
       <div class="operator-badge">
         <span class="op-avatar">OP</span>
-        <span class="op-name">Op. [NAME] · Shift B</span>
+        <span class="op-name">Op. R. Sharma · Shift B</span>
       </div>
     </div>
   </header>
@@ -76,15 +76,15 @@
 
         <!-- Filter tabs -->
         <div class="queue-filters">
-          <button class="filter-btn active" data-filter="all">All 4</button>
-          <button class="filter-btn" data-filter="high">High (70+)</button>
+          <button class="filter-btn" data-filter="all">All 4</button>
+          <button class="filter-btn active" data-filter="high">High (70+)</button>
           <button class="filter-btn" data-filter="review">Review (40–69)</button>
           <button class="filter-btn" data-filter="log">Log (&lt;40)</button>
         </div>
 
         <!-- Alert list items -->
         <div class="queue-list" id="queue-list-items">
-          <!-- Populated dynamically / initial state -->
+          <!-- Populated dynamically via app.js -->
         </div>
       </div>
 
@@ -92,6 +92,7 @@
       <div class="c2-panel panel-sensor-health">
         <div class="panel-header">
           <span class="panel-title">Sensor health</span>
+          <span class="panel-subtitle">3 / 4 online</span>
         </div>
 
         <table class="health-table">
@@ -126,7 +127,7 @@
               <td>N4</td>
               <td style="color:var(--amber);">23%</td>
               <td>−88 dBm</td>
-              <td style="text-align:right;">4 s</td>
+              <td style="text-align:right;"><span class="badge-offline">OFFLINE</span></td>
             </tr>
           </tbody>
         </table>
@@ -141,28 +142,48 @@
         <div class="map-hud-bar">
           <div class="map-hud-left">
             <div class="map-switcher-pills">
-              <button class="map-pill active" id="btn-map-view">Map</button>
-              <button class="map-pill" id="btn-satellite-view">Satellite</button>
+              <button class="map-pill" id="btn-map-view">Map</button>
+              <button class="map-pill active" id="btn-satellite-view">Satellite</button>
             </div>
             <div class="cursor-coords-tag">
-              Cursor <span id="map-cursor-coords">26.8696° N, 84.1943° E</span> · MGRS [AUTO]
+              Cursor <span id="map-cursor-coords">26.8570° N, 84.2111° E</span> &nbsp; MGRS 45R TK 22884 73645
             </div>
           </div>
 
           <div class="map-hud-right">
-            <button class="cam-count-btn" id="btn-cam-indicator">
-              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
-              Cameras (20)
-              <span class="cam-badge-red">3</span>
-            </button>
+            <div class="map-high-alert-banner" id="map-alert-banner">
+              <span class="alert-banner-icon">⚠</span>
+              <span class="alert-banner-text">HIGH ALERT</span>
+              <span class="alert-banner-tag">ALT-5408 · 92</span>
+            </div>
           </div>
         </div>
 
-        <!-- LEAFLET MAP ELEMENT -->
+        <!-- Compass Overlay -->
+        <div class="map-compass-badge" title="Tactical North">
+          <span>N</span>
+        </div>
+
+        <!-- LEAFLET MAP CONTAINER -->
         <div id="c2-leaflet-map"></div>
 
-        <!-- Scale & Compass overlay -->
-        <div class="map-compass-badge">N</div>
+        <!-- Tactical Legend Overlay on Map -->
+        <div class="map-tactical-legend">
+          <div class="legend-row">
+            <span class="legend-box zone-a"></span>
+            <span>Zone A · N3 / N1</span>
+          </div>
+          <div class="legend-row">
+            <span class="legend-box zone-b"></span>
+            <span>Zone B · N4 (offline)</span>
+          </div>
+          <div class="legend-row">
+            <span class="legend-box zone-c"></span>
+            <span>Zone C · N2</span>
+          </div>
+        </div>
+
+        <!-- Scale badge -->
         <div class="map-scale-badge">1 km</div>
       </div>
 
@@ -170,9 +191,12 @@
       <div class="c2-panel panel-sensor-log">
         <div class="panel-header log-header">
           <span class="panel-title">Sensor log</span>
-          <span class="log-streaming-tag">
-            <span class="streaming-dot"></span> Streaming
-          </span>
+          <div class="log-header-right">
+            <span class="log-sort-tag">Newest first</span>
+            <span class="log-streaming-tag">
+              <span class="streaming-dot"></span> Streaming
+            </span>
+          </div>
         </div>
 
         <div class="log-content-box" id="sensor-log-box">
@@ -181,37 +205,69 @@
       </div>
     </main>
 
-    <!-- RIGHT COLUMN -->
+    <!-- RIGHT COLUMN: FULL HEIGHT THREAT & TACTICAL C2 PANEL -->
     <aside class="col-right">
-      <!-- ACTIVE ALERT DETAIL -->
-      <div class="c2-panel panel-alert-detail" id="alert-detail-panel">
-        <div class="detail-header">
-          <span class="detail-id" id="detail-id">ALT-5408</span>
-          <span class="detail-badge high" id="detail-badge">HIGH · 92</span>
+      <div class="c2-panel panel-threat-c2" id="alert-detail-panel">
+        
+        <!-- Threat Header -->
+        <div class="threat-header">
+          <div class="threat-id-row">
+            <span class="threat-id" id="detail-id">ALT-5408</span>
+            <span class="threat-badge high" id="detail-badge">HIGH · 92</span>
+          </div>
+          <div class="threat-subtitle" id="detail-subtitle">Sector G2 · Gandak · Zone A</div>
         </div>
 
-        <div class="detail-grid">
-          <div class="grid-cell">
-            <span class="cell-label">Target</span>
-            <span class="cell-val" id="detail-target">Person ×3</span>
+        <!-- 3-Column Metadata Grid (Target, Seen, Heading, Node/Cam, Distance, ETA) -->
+        <div class="threat-meta-grid">
+          <div class="meta-col">
+            <span class="meta-label">Target</span>
+            <span class="meta-val" id="detail-target">Person ×3</span>
           </div>
-          <div class="grid-cell">
-            <span class="cell-label">First seen</span>
-            <span class="cell-val" id="detail-seen">2 min ago</span>
+          <div class="meta-col">
+            <span class="meta-label">First seen</span>
+            <span class="meta-val" id="detail-seen">2 min ago <span class="meta-time-sub">22:35:09</span></span>
           </div>
-          <div class="grid-cell">
-            <span class="cell-label">Node / camera</span>
-            <span class="cell-val" id="detail-node">N3 · CAM 07</span>
+          <div class="meta-col">
+            <span class="meta-label">Heading</span>
+            <span class="meta-val" id="detail-heading">045° · NE</span>
           </div>
-          <div class="grid-cell">
-            <span class="cell-label">Distance to BOP-1</span>
-            <span class="cell-val" id="detail-dist">2.4 km</span>
+          <div class="meta-col">
+            <span class="meta-label">Node / camera</span>
+            <span class="meta-val" id="detail-node">N3 · CAM 07</span>
+          </div>
+          <div class="meta-col">
+            <span class="meta-label">Distance to BOP-1</span>
+            <span class="meta-val" id="detail-dist">2.4 km</span>
+          </div>
+          <div class="meta-col">
+            <span class="meta-label">Intercept ETA</span>
+            <span class="meta-val" id="detail-eta">6 min</span>
           </div>
         </div>
 
-        <!-- WHY THIS SCORE -->
+        <!-- Embedded Camera Feed Box with YOLOv8 Overlays -->
+        <div class="cam-feed-container">
+          <div class="cam-feed-header">
+            <div class="cam-title-left">
+              <span class="cam-id-txt" id="cam-feed-title">CAM 07 · Thermal</span>
+              <span class="yolo-tag">YOLOv8 detection</span>
+            </div>
+            <div class="cam-header-right">
+              <span class="cam-viewed-pill">✓ Viewed 22:36:12</span>
+              <span class="live-pill"><span class="live-dot"></span> LIVE</span>
+            </div>
+          </div>
+
+          <div class="cam-viewport-box" id="cam-viewport-box">
+            <img src="/static/assets/thermal_intrusion_group.jpg" alt="FLIR Thermal Intrusion Feed" class="cam-live-img" id="live-thermal-feed">
+            <div class="cam-boxes-overlay" id="cam-boxes-overlay"></div>
+          </div>
+        </div>
+
+        <!-- WHY THIS SCORE Breakdown -->
         <div class="why-score-card">
-          <div class="why-score-title">Why this score</div>
+          <div class="why-score-title">WHY THIS SCORE</div>
           <div class="why-score-rows" id="why-score-rows">
             <div class="score-row">
               <span>Night-time, low-traffic sector</span>
@@ -238,41 +294,94 @@
           <div class="sensor-confidence-line" id="detail-confidence-line">
             Thermal 94% · PIR 88% · Seismic 81%
           </div>
-        </div>
 
-        <!-- ACTION BUTTONS -->
-        <div class="detail-actions-row">
-          <button class="action-btn-primary" id="btn-view-cam">View CAM 07</button>
-          <button class="action-btn-secondary" id="btn-acknowledge">Acknowledge</button>
-          <button class="action-btn-secondary" id="btn-escalate">Escalate</button>
-        </div>
-      </div>
-
-      <!-- RESPONSE ASSETS -->
-      <div class="c2-panel panel-response-assets">
-        <div class="panel-header">
-          <span class="panel-title">Response assets</span>
-        </div>
-
-        <div class="assets-list">
-          <div class="asset-row">
-            <span class="asset-name">DR-02 · quadcopter</span>
-            <span class="asset-status ready">Ready · 86%</span>
+          <!-- ML Isolation Forest Baseline Anomaly Line -->
+          <div class="ml-anomaly-line" id="detail-ml-anomaly">
+            <span>ML Baseline Anomaly:</span>
+            <span class="ml-score-val" id="detail-ml-score">88 / 100</span>
+            <span class="ml-outlier-tag" id="detail-ml-tag">OUTLIER</span>
           </div>
-          <div class="asset-row">
-            <span class="asset-name">DR-05 · fixed-wing</span>
-            <span class="asset-status charging">Charging · 41%</span>
-          </div>
-          <div class="asset-row">
-            <span class="asset-name">QRT Alpha (6 pax)</span>
-            <span class="asset-status bop">At BOP-1</span>
+
+          <!-- Seismic Harmonic Frequency Waveform Visualizer -->
+          <div class="seismic-waveform-box">
+            <div class="waveform-header">
+              <span>SEISMIC HARMONIC FREQUENCY</span>
+              <span class="waveform-freq-tag" id="waveform-freq-tag">81% CONF</span>
+            </div>
+            <canvas id="seismic-waveform-canvas" width="340" height="42"></canvas>
           </div>
         </div>
 
-        <div class="intercept-eta-box">
-          <span class="eta-label">Intercept ETA</span>
-          <span class="eta-value" id="detail-eta-val">6 min</span>
+        <!-- Action / Decision Controls -->
+        <div class="threat-actions-container">
+          <!-- Operator Decision Row 1: Auxiliary Actions -->
+          <div class="decision-cards-row">
+            <button class="decision-card" id="btn-open-cameras">
+              <div class="card-icon-row">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+                <span class="card-title">Cameras (20)</span>
+                <span class="card-pill-red">3</span>
+              </div>
+              <div class="card-subtext">3 on alert · view all feeds</div>
+            </button>
+
+            <button class="decision-card pending" id="btn-action-pending">
+              <div class="card-icon-row">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+                <span class="card-title amber-text">Pending</span>
+                <span class="card-dot-amber"></span>
+              </div>
+              <div class="card-subtext">Awaiting operator decision</div>
+            </button>
+
+            <button class="decision-card" id="btn-action-track">
+              <div class="card-icon-row">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
+                <span class="card-title">Tracked</span>
+              </div>
+              <div class="card-subtext">Keep target under watch</div>
+            </button>
+          </div>
+
+          <!-- Operator Decision Row 2: Confirm, Dismiss, Escalate -->
+          <div class="decision-cards-row decision-secondary-row">
+            <button class="decision-card action-confirm" id="btn-action-confirm" title="Validate positive threat detection">
+              <div class="card-icon-row">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"></polyline></svg>
+                <span class="card-title">Confirm</span>
+              </div>
+              <div class="card-subtext">Verify threat per SOP</div>
+            </button>
+
+            <button class="decision-card action-dismiss" id="btn-action-dismiss" title="Dismiss false alarm & suppress future weight">
+              <div class="card-icon-row">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+                <span class="card-title">Dismiss</span>
+              </div>
+              <div class="card-subtext">Suppress & learn sector</div>
+            </button>
+
+            <button class="decision-card action-escalate" id="btn-action-escalate" title="Escalate priority notice to Commander">
+              <div class="card-icon-row">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+                <span class="card-title">Escalate</span>
+              </div>
+              <div class="card-subtext">Notify sector command</div>
+            </button>
+          </div>
+
+          <!-- Big Full-Width Primary Dispatch Button -->
+          <button class="dispatch-primary-btn" id="btn-action-dispatch">
+            <div class="dispatch-icon-box">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            </div>
+            <div class="dispatch-text-box">
+              <span class="dispatch-headline">Dispatch</span>
+              <span class="dispatch-footnote">Send DR-02 drone + QRT Alpha · ETA 3 min</span>
+            </div>
+          </button>
         </div>
+
       </div>
     </aside>
 
@@ -281,31 +390,31 @@
   <!-- FOOTER: DEMO CONTROLS -->
   <footer class="c2-footer">
     <button class="demo-controls-toggle" id="btn-toggle-demo-drawer">
-      <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
       Demo controls
     </button>
 
-    <!-- Expandable Demo Control Bar -->
     <div class="demo-controls-bar" id="demo-controls-bar">
       <span class="demo-label">RUN SCENARIOS:</span>
-      <button class="demo-btn danger" data-scenario="intrusion">🚨 Night Intrusion</button>
-      <button class="demo-btn success" data-scenario="routine">🚶 Market Crossing</button>
-      <button class="demo-btn warning" data-scenario="animal">🐄 Stray Animal</button>
-      <button class="demo-btn" data-scenario="single_sensor">⚠️ Single Sensor Probe</button>
+      <button class="demo-btn" data-scenario="intrusion">🚨 Night Intrusion</button>
+      <button class="demo-btn" data-scenario="routine">🚶 Market Crossing</button>
+      <button class="demo-btn" data-scenario="animal">🐄 Stray Animal</button>
+      <button class="demo-btn" data-scenario="single_sensor">⚠️ Single Sensor</button>
       <button class="demo-btn" data-scenario="offline">📡 Node Offline</button>
-      <span class="demo-divider"></span>
       <button class="demo-btn" id="btn-reset-sandbox">↺ Reset Baseline</button>
-      <select id="sel-scenario-speed" class="demo-speed-sel">
-        <option value="1.0">1x Normal</option>
-        <option value="2.0">2x Speed</option>
-        <option value="4.0">4x Speed</option>
-      </select>
+      <div class="speed-select-wrap">
+        <select id="sel-scenario-speed" class="demo-speed-sel">
+          <option value="1.0">1x Speed</option>
+          <option value="2.0" selected>2x Speed ▾</option>
+          <option value="4.0">4x Speed</option>
+        </select>
+      </div>
     </div>
   </footer>
 
 </div>
 
-<!-- CAM 07 THERMAL FEED MODAL -->
+<!-- CAM MODAL (EXPANDED SURVEILLANCE VIEW) -->
 <div class="c2-modal-backdrop" id="modal-cam-view">
   <div class="c2-modal-card">
     <div class="c2-modal-header">
@@ -320,12 +429,12 @@
         <img src="/static/assets/thermal_intrusion_group.jpg" alt="Thermal Surveillance Feed" class="cam-feed-image" id="modal-feed-img">
         <div class="cam-telemetry-overlay">
           <div class="cam-ov-top">
-            <span>HDG: 045° NE · RNG: 185m</span>
+            <span>HDG: 045° NE · RNG: 140m</span>
             <span>POL: WHITE-HOT · SENS: HIGH</span>
           </div>
           <div class="cam-ov-bottom">
             <span class="yolo-box-tag">Person ×3 (94%)</span>
-            <span>REC [●] 20:12:09 IST</span>
+            <span>REC [●] <span id="modal-cam-time">22:37:09 IST</span></span>
           </div>
         </div>
       </div>
@@ -351,9 +460,57 @@
           </tr>
         </thead>
         <tbody id="audit-modal-tbody">
-          <!-- Filled by js -->
+          <!-- Populated by JS -->
         </tbody>
       </table>
+    </div>
+  </div>
+</div>
+
+<!-- DRONE RECON MODAL -->
+<div class="c2-modal-backdrop" id="modal-drone-recon">
+  <div class="c2-modal-card" style="max-width: 820px;">
+    <div class="c2-modal-header">
+      <div class="modal-cam-title">
+        <span class="cam-tag" style="background:#ef4444; color:#fff;">DR-02 RECON</span>
+        <span>Autonomous UAV Aerial Surveillance · FLIR White-Hot</span>
+      </div>
+      <button class="c2-modal-close" id="btn-close-drone-modal">&times;</button>
+    </div>
+    <div class="c2-modal-body">
+      <div class="cam-feed-wrapper">
+        <img src="/static/assets/drone_recon.jpg" alt="Aerial Drone Reconnaissance Feed" class="cam-feed-image" id="drone-feed-img">
+        <div class="cam-telemetry-overlay">
+          <div class="cam-ov-top">
+            <span>ALT: 85m AGL · HDG: 198° · OPTICAL ZOOM 4.2x</span>
+            <span style="color:#ef4444; font-weight:700;">SIMULATED AERIAL RECON</span>
+          </div>
+          <div class="cam-ov-bottom">
+            <span class="yolo-box-tag">Target Coordinates Verified (91%)</span>
+            <span>UAV TELEMETRY LINK: STABLE · BAT: 84%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- DISMISS NOTE MODAL -->
+<div class="c2-modal-backdrop" id="modal-dismiss-reason">
+  <div class="c2-modal-card" style="max-width: 480px;">
+    <div class="c2-modal-header">
+      <span style="font-weight:600; color:#fff;">Dismiss Alert · Mandatory Justification</span>
+      <button class="c2-modal-close" id="btn-close-dismiss-modal">&times;</button>
+    </div>
+    <div class="c2-modal-body" style="padding: 16px;">
+      <p style="font-size:12px; color:var(--text-muted); margin-bottom:12px;">
+        Dismissals feed into the context engine to reduce threat weights for identical patterns in this sector.
+      </p>
+      <input type="text" id="dismiss-note-input" class="c2-input-field" placeholder="e.g., Authorized night patrol / known villager" style="width:100%; padding:8px 10px; background:#111827; border:1px solid #374151; color:#fff; border-radius:4px; font-size:12px; margin-bottom:14px;">
+      <div style="display:flex; justify-content:flex-end; gap:8px;">
+        <button class="c2-btn-ghost" id="btn-cancel-dismiss">Cancel</button>
+        <button class="c2-btn-primary" id="btn-confirm-dismiss" style="background:#ef4444; border:none; padding:6px 14px; color:#fff; border-radius:4px; font-weight:600; cursor:pointer;">Confirm Dismissal</button>
+      </div>
     </div>
   </div>
 </div>

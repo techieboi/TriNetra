@@ -23,12 +23,15 @@ class MemoryStore:
         """Initializes data to match the reference C2 dashboard layout."""
         self.alerts.clear()
         self.sensor_logs = [
-            {"time": "20:06:12", "source": "N4", "text": "Battery low (23%) · maintenance ticket opened", "type": "warning"},
-            {"time": "20:09:31", "source": "N4", "text": "Seismic + PIR agree, no thermal lock · ALT-1139 · 65", "type": "info"},
-            {"time": "20:12:05", "source": "N3", "text": "Seismic: footfall pattern, 3 sources (81%)", "type": "info"},
-            {"time": "20:12:06", "source": "N3", "text": "PIR: motion in zone A (88%)", "type": "info"},
-            {"time": "20:12:09", "source": "CAM 07", "text": "Thermal: person ×3, heading 045° (94%)", "type": "info"},
-            {"time": "20:12:09", "source": "FUSION", "text": "ALT-5408 raised · score 92 · HIGH", "type": "high"},
+            {"time": "22:29:12", "source": "N4", "text": "Battery low (23%) · maintenance ticket opened", "type": "warning"},
+            {"time": "22:31:31", "source": "N4", "text": "Seismic + PIR agree, no thermal lock · ALT-1139 · 65", "type": "info"},
+            {"time": "22:33:48", "source": "N4", "text": "Heartbeat lost · node marked OFFLINE", "type": "warning"},
+            {"time": "22:35:05", "source": "N3", "text": "Seismic: footfall pattern, 3 sources (81%)", "type": "info"},
+            {"time": "22:35:06", "source": "N3", "text": "PIR: motion in zone A (88%)", "type": "info"},
+            {"time": "22:35:09", "source": "CAM 07", "text": "Thermal: person ×3, heading 045° (94%)", "type": "info"},
+            {"time": "22:35:09", "source": "FUSION", "text": "ALT-5408 raised · score 92 · HIGH", "type": "high"},
+            {"time": "22:36:12", "source": "OPERATOR", "text": "CAM 07 viewed on ALT-5408 by Op. R. Sharma", "type": "operator"},
+            {"time": "22:36:15", "source": "DR-02", "text": "Pre-flight check OK · ready for launch (86%)", "type": "drone"}
         ]
 
         # 1. Primary Highlight Alert ALT-5408
@@ -40,6 +43,7 @@ class MemoryStore:
             distance_km=2.4,
             eta_minutes=6.0,
             score=92,
+            ml_score=88,
             band="high",
             reasons=[
                 ReasonItem(factor="Night-time, low-traffic sector", weight=30),
@@ -49,17 +53,18 @@ class MemoryStore:
             ],
             primary_node="N3 · CAM 07",
             lat=26.8540,
-            lon=26.8540,  # normalized
+            lon=84.2270,
             source="sim",
             detected_class="Person ×3",
             detected_count=3,
             heading_deg=45.0,
             snapshot="/static/assets/thermal_intrusion_group.jpg",
+            bounding_boxes=[[0.28, 0.35, 0.42, 0.78], [0.45, 0.32, 0.58, 0.81], [0.62, 0.38, 0.75, 0.84]],
+            waveform_samples=[0.05, 0.08, 0.75, 0.92, 0.65, 0.12, 0.04, 0.06, 0.71, 0.88, 0.60, 0.10, 0.05, 0.07, 0.73, 0.89, 0.62, 0.08],
+            confidence_breakdown={"Thermal": 0.94, "PIR": 0.88, "Seismic": 0.81},
             status="open",
             created_at="2 min ago"
         )
-        self.alerts["ALT-5408"].lat = 26.8540
-        self.alerts["ALT-5408"].lon = 84.2270
 
         # 2. ALT-1139 (Review 65)
         self.alerts["ALT-1139"] = Alert(
@@ -70,6 +75,7 @@ class MemoryStore:
             distance_km=2.8,
             eta_minutes=9.0,
             score=65,
+            ml_score=62,
             band="review",
             reasons=[
                 ReasonItem(factor="Night-time, low-traffic sector", weight=30),
@@ -83,6 +89,8 @@ class MemoryStore:
             detected_class="Footsteps ×1",
             detected_count=1,
             heading_deg=350.0,
+            waveform_samples=[0.02, 0.04, 0.55, 0.72, 0.45, 0.08, 0.02, 0.03, 0.52, 0.69, 0.40, 0.05],
+            confidence_breakdown={"Seismic": 0.85, "PIR": 0.78},
             status="open",
             created_at="5 min ago"
         )
@@ -96,6 +104,7 @@ class MemoryStore:
             distance_km=3.1,
             eta_minutes=10.0,
             score=52,
+            ml_score=48,
             band="review",
             reasons=[
                 ReasonItem(factor="Night-time, low-traffic sector", weight=30),
@@ -109,6 +118,8 @@ class MemoryStore:
             detected_class="Footsteps ×1",
             detected_count=1,
             heading_deg=10.0,
+            waveform_samples=[0.03, 0.05, 0.48, 0.61, 0.38, 0.07, 0.02, 0.04, 0.45, 0.58, 0.32, 0.06],
+            confidence_breakdown={"Seismic": 0.79, "PIR": 0.65},
             status="open",
             created_at="11 min ago"
         )
@@ -122,6 +133,7 @@ class MemoryStore:
             distance_km=2.4,
             eta_minutes=0.0,
             score=25,
+            ml_score=20,
             band="log",
             reasons=[
                 ReasonItem(factor="Night-time, low-traffic sector", weight=30),
@@ -137,6 +149,8 @@ class MemoryStore:
             detected_count=2,
             heading_deg=120.0,
             snapshot="/static/assets/thermal_livestock.jpg",
+            waveform_samples=[0.04, 0.08, 0.35, 0.42, 0.31, 0.09, 0.05, 0.09, 0.38, 0.44, 0.29, 0.07],
+            confidence_breakdown={"Thermal": 0.89, "Seismic": 0.62},
             status="open",
             created_at="18 min ago"
         )
@@ -183,7 +197,7 @@ class MemoryStore:
             {"score": alert.score, "band": alert.band, "bop": alert.bop_name, "distance_km": alert.distance_km}
         )
 
-    def record_action(self, alert_id: str, action: str, note: str, operator: str = "Op. [NAME] · Shift B") -> Optional[Alert]:
+    def record_action(self, alert_id: str, action: str, note: str, operator: str = "Op. R. Sharma · Shift B") -> Optional[Alert]:
         alert = self.alerts.get(alert_id)
         if not alert:
             return None
@@ -200,6 +214,10 @@ class MemoryStore:
 
         if action in ("confirm", "dismiss", "escalate"):
             alert.status = action # type: ignore
+        elif action == "track":
+            alert.status = "tracked"
+        elif action == "pending":
+            alert.status = "open"
 
         self.add_sensor_log("OPERATOR", f"Action {action.upper()} on {alert_id} by {operator}", "info")
         self.log_audit(

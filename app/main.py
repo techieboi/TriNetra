@@ -1,7 +1,8 @@
 import asyncio
 import json
+from datetime import datetime, timezone
 from pathlib import Path
-from typing import List, Set
+from typing import List, Set, Dict, Any, Optional
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect, HTTPException
@@ -19,6 +20,11 @@ from app.engine.context import context_evaluator
 from app.engine.scoring import scoring_engine
 from app.engine.routing import routing_engine
 from app.engine.scenario_player import scenario_player
+
+# Plug-and-Play Model Adapters
+from app.ml.vision_adapter import vision_adapter
+from app.ml.vibration_adapter import vibration_adapter
+from app.ml.anomaly_adapter import anomaly_adapter
 
 # Connection manager for WebSockets
 class ConnectionManager:
@@ -72,9 +78,10 @@ async def engine_loop():
             # Process event through Fusion & Context Engine
             inc = fusion_engine.process_event(event)
             ctx = context_evaluator.evaluate(inc)
-            score, band, reasons = scoring_engine.score(inc, ctx)
+            score, band, reasons, ml_score = scoring_engine.score(inc, ctx)
 
             inc.score = score
+            inc.ml_score = ml_score
             inc.band = band # type: ignore
             inc.reasons = reasons
             store.save_incident(inc)
@@ -91,6 +98,23 @@ async def engine_loop():
                 elif event.label:
                     detected_class = event.label
 
+                # Multimodal confidence calculation
+                confidence_breakdown: Dict[str, float] = {}
+                for ev in inc.events:
+                    if ev.type == "vision":
+                        confidence_breakdown["Thermal"] = round(ev.confidence, 2)
+                    elif ev.type == "pir":
+                        confidence_breakdown["PIR"] = round(ev.confidence, 2)
+                    elif ev.type == "vibration":
+                        confidence_breakdown["Seismic"] = round(ev.confidence, 2)
+                if not confidence_breakdown:
+                    confidence_breakdown["Sensor"] = 0.85
+
+                # Generate waveform samples & bounding boxes via Model Adapters
+                waveform = vibration_adapter.generate_synthetic_waveform(detected_class or "footstep")
+                snapshot_target = ctx.latest_snapshot or event.snapshot or "/static/assets/thermal_intrusion_group.jpg"
+                vision_res = vision_adapter.predict(snapshot_target, hint_class=detected_class, hint_count=ctx.max_count)
+
                 existing_alert = store.alerts.get(alert_id)
                 actions = existing_alert.actions if existing_alert else []
                 status = existing_alert.status if existing_alert else "open"
@@ -103,26 +127,31 @@ async def engine_loop():
                     distance_km=dist_km,
                     eta_minutes=eta,
                     score=score,
+                    ml_score=ml_score,
                     band=band, # type: ignore
                     reasons=reasons,
                     primary_node=ctx.primary_node,
                     lat=ctx.primary_lat,
                     lon=ctx.primary_lon,
                     source=event.source,
-                    detected_class=detected_class,
+                    detected_class=f"{detected_class.capitalize()} ×{ctx.max_count}" if detected_class else "Unknown",
                     detected_count=ctx.max_count,
                     heading_deg=ctx.latest_heading,
-                    snapshot=ctx.latest_snapshot or event.snapshot,
+                    snapshot=snapshot_target,
+                    bounding_boxes=vision_res.bounding_boxes,
+                    waveform_samples=waveform,
+                    confidence_breakdown=confidence_breakdown,
                     status=status,
                     actions=actions,
-                    created_at=event.ts
+                    created_at="Just now"
                 )
                 store.upsert_alert(alert)
 
-                # Broadcast live alert to connected command stations
+                # Broadcast live alert to connected command stations with audio cue indicator
                 await ws_manager.broadcast({
                     "type": "alert",
-                    "data": alert.model_dump()
+                    "data": alert.model_dump(),
+                    "audio_cue": (score >= 70)
                 })
 
             # Broadcast updated node status
@@ -145,8 +174,8 @@ async def lifespan(app: FastAPI):
 
 app = FastAPI(
     title="TriNetra Sentinel C2 Backend",
-    version="1.0.0",
-    description="Context-Aware Border Early-Warning Intelligence Engine",
+    version="1.4.2",
+    description="Context-Aware Border Early-Warning Intelligence Engine with Plug-and-Play ML Providers",
     lifespan=lifespan
 )
 
@@ -179,6 +208,27 @@ def get_nodes():
 def get_audit(limit: int = 100):
     return store.audit_log[-limit:]
 
+@app.get("/api/models/status")
+def get_models_status():
+    """Diagnostic endpoint checking live trained model weights vs synthetic fallback."""
+    return {
+        "vision": {
+            "loaded": vision_adapter.is_model_loaded(),
+            "mode": "live_yolo" if vision_adapter.is_model_loaded() else "synthetic_fallback",
+            "weights_path": str(vision_adapter.weights_file)
+        },
+        "vibration": {
+            "loaded": vibration_adapter.is_model_loaded(),
+            "mode": "live_classifier" if vibration_adapter.is_model_loaded() else "synthetic_fallback",
+            "weights_path": str(vibration_adapter.weights_file)
+        },
+        "anomaly": {
+            "loaded": anomaly_adapter.is_model_loaded(),
+            "mode": "live_isolation_forest" if anomaly_adapter.is_model_loaded() else "synthetic_baseline_fallback",
+            "weights_path": str(anomaly_adapter.weights_file)
+        }
+    }
+
 @app.get("/api/scenarios")
 def get_scenarios():
     return scenario_player.list_scenarios()
@@ -190,7 +240,7 @@ class RunScenarioRequest(BaseModel):
 async def run_scenario(name: str, req: RunScenarioRequest = RunScenarioRequest()):
     success = await scenario_player.play_scenario(name, speed_multiplier=req.speed)
     if not success:
-        raise HTTPException(status_code=404, detail="Scenario not found")
+        raise HTTPException(status_code=404, detail=f"Scenario '{name}' not found")
     store.log_audit("SCENARIO", name, "TRIGGER", f"Demo scenario '{name}' initiated", {"speed": req.speed})
     await ws_manager.broadcast({
         "type": "scenario_started",
@@ -201,13 +251,19 @@ async def run_scenario(name: str, req: RunScenarioRequest = RunScenarioRequest()
 class ActionPayload(BaseModel):
     action: str
     note: str
-    operator: str = "Duty Officer // Sector 4"
+    operator: str = "Op. R. Sharma · Shift B"
 
 @app.post("/api/alerts/{alert_id}/actions")
 async def record_action(alert_id: str, payload: ActionPayload):
     alert = store.record_action(alert_id, payload.action, payload.note, payload.operator)
     if not alert:
         raise HTTPException(status_code=404, detail="Alert not found")
+    
+    # Register feedback loop if dismissed
+    if payload.action == "dismiss":
+        node_name = alert.primary_node.split()[0]
+        scoring_engine.register_dismissal(node_name, 2, alert.detected_class)
+
     await ws_manager.broadcast({
         "type": "alert_action",
         "data": alert.model_dump()
@@ -224,9 +280,12 @@ async def deploy_drone(alert_id: str):
     await ws_manager.broadcast({
         "type": "drone_dispatch",
         "alert_id": alert_id,
+        "bop_lat": 26.8440,
+        "bop_lon": 84.2335,
         "target_lat": alert.lat,
         "target_lon": alert.lon,
-        "status": "in_flight"
+        "status": "in_flight",
+        "eta_seconds": 6
     })
     return {"ok": True, "status": "dispatched", "eta_seconds": 6}
 

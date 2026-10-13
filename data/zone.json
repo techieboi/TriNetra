@@ -84,7 +84,7 @@
   "geofences": [
     {
       "id": "geo-zone-a",
-      "name": "Zone A (Forest Track Sector)",
+      "name": "Zone A - N3 / N1",
       "kind": "forest_track",
       "active_hours": "HIGH NIGHT PROBING ZONE",
       "risk_modifier": 25,
@@ -98,7 +98,7 @@
     },
     {
       "id": "geo-zone-b",
-      "name": "Zone B (Zero-Line Riverbed)",
+      "name": "Zone B - N4 (offline)",
       "kind": "restricted",
       "active_hours": "RESTRICTED ZERO-ACCESS",
       "risk_modifier": 15,
@@ -111,8 +111,8 @@
       ]
     },
     {
-      "id": "geo-market-crossing",
-      "name": "Authorised Crossing Route",
+      "id": "geo-zone-c",
+      "name": "Zone C - N2",
       "kind": "crossing_route",
       "active_hours": "08:00 - 18:00",
       "risk_modifier": -30,

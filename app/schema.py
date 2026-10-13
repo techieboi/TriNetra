@@ -16,6 +16,7 @@ class Event(BaseModel):
     lon: float
     source: Literal["live", "sim", "replay"] = "sim"
     snapshot: Optional[str] = None
+    bounding_boxes: Optional[List[List[float]]] = None
 
 class ReasonItem(BaseModel):
     factor: str
@@ -29,14 +30,15 @@ class Incident(BaseModel):
     start_ts: str
     last_ts: str
     score: int = 0
+    ml_score: Optional[int] = None
     band: Literal["high", "review", "log"] = "log"
     reasons: List[ReasonItem] = []
-    status: Literal["open", "confirmed", "dismissed", "escalated"] = "open"
+    status: Literal["open", "confirmed", "dismissed", "escalated", "tracked"] = "open"
 
 class OperatorAction(BaseModel):
     action_id: str
     alert_id: str
-    action: Literal["confirm", "dismiss", "escalate", "need_info", "drone_check"]
+    action: Literal["confirm", "dismiss", "escalate", "need_info", "drone_check", "track", "pending"]
     note: str
     operator: str = "Duty Commander // BOP-1"
     ts: str
@@ -49,6 +51,7 @@ class Alert(BaseModel):
     distance_km: float
     eta_minutes: float
     score: int
+    ml_score: Optional[int] = None
     band: Literal["high", "review", "log"]
     reasons: List[ReasonItem]
     primary_node: str
@@ -59,7 +62,10 @@ class Alert(BaseModel):
     detected_count: int = 1
     heading_deg: Optional[float] = None
     snapshot: Optional[str] = None
-    status: Literal["open", "confirmed", "dismissed", "escalated"] = "open"
+    bounding_boxes: Optional[List[List[float]]] = None
+    waveform_samples: Optional[List[float]] = None
+    confidence_breakdown: Optional[Dict[str, float]] = None
+    status: Literal["open", "confirmed", "dismissed", "escalated", "tracked"] = "open"
     actions: List[OperatorAction] = []
     created_at: str
 
