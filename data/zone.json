@@ -1,81 +1,119 @@
 {
   "zone_id": "G2",
   "name": "G2 · Gandak",
-  "description": "Border Sensor Fusion Sector G2 · Gandak",
+  "description": "India–Nepal border sector G2 · Gandak (fictional demo zone)",
   "bounds": {
-    "min_lat": 26.8380,
-    "max_lat": 26.8640,
-    "min_lon": 84.2150,
-    "max_lon": 84.2500
+    "min_lat": 26.838,
+    "max_lat": 26.864,
+    "min_lon": 84.215,
+    "max_lon": 84.25
   },
   "center": {
     "lat": 26.8512,
     "lon": 84.2321,
-    "zoom": 14
+    "zoom": 15
   },
   "international_border": [
-    [26.8590, 84.2150],
-    [26.8575, 84.2260],
-    [26.8550, 84.2350],
-    [26.8525, 84.2480]
+    [
+      26.859,
+      84.215
+    ],
+    [
+      26.8575,
+      84.226
+    ],
+    [
+      26.855,
+      84.235
+    ],
+    [
+      26.8525,
+      84.248
+    ]
   ],
   "nodes": [
     {
       "id": "N1",
-      "name": "N1 · Core Patrol Node",
+      "name": "N1 · Forest edge",
       "lat": 26.8505,
       "lon": 84.2285,
-      "status": "online",
-      "battery": 91,
-      "signal_dbm": -71,
-      "seen_s": "1 s",
-      "sensors": ["seismic", "pir"],
+      "camera": "CAM 03",
+      "radar": {
+        "model": "mmWave 60 GHz (simulated)",
+        "fov_deg": 120,
+        "range_m": 300,
+        "demo_range_m": 6,
+        "facing_deg": 0
+      },
+      "sensors": [
+        "mmwave_radar",
+        "thermal_camera"
+      ],
       "source_type": "sim"
     },
     {
       "id": "N2",
-      "name": "N2 · Trail Approach",
-      "lat": 26.8480,
+      "name": "N2 · Market crossing",
+      "lat": 26.848,
       "lon": 84.2315,
-      "status": "online",
-      "battery": 84,
-      "signal_dbm": -76,
-      "seen_s": "1 s",
-      "sensors": ["seismic", "pir"],
+      "camera": "CAM 05",
+      "radar": {
+        "model": "mmWave 60 GHz (simulated)",
+        "fov_deg": 120,
+        "range_m": 300,
+        "demo_range_m": 6,
+        "facing_deg": 90
+      },
+      "sensors": [
+        "mmwave_radar",
+        "thermal_camera"
+      ],
       "source_type": "sim"
     },
     {
       "id": "N3",
-      "name": "N3 · CAM 07 (Thermal Ridge)",
-      "lat": 26.8540,
-      "lon": 84.2270,
-      "status": "online",
-      "battery": 67,
-      "signal_dbm": -82,
-      "seen_s": "2 s",
+      "name": "N3 · Thermal ridge",
+      "lat": 26.854,
+      "lon": 84.227,
       "camera": "CAM 07",
-      "sensors": ["thermal", "seismic", "pir"],
+      "radar": {
+        "model": "mmWave 60 GHz (simulated)",
+        "fov_deg": 120,
+        "range_m": 300,
+        "demo_range_m": 6,
+        "facing_deg": 30
+      },
+      "sensors": [
+        "mmwave_radar",
+        "thermal_camera"
+      ],
       "source_type": "sim"
     },
     {
       "id": "N4",
-      "name": "N4 · CAM 12/13 (Dry Riverbed)",
-      "lat": 26.8530,
-      "lon": 84.2360,
-      "status": "warning",
-      "battery": 23,
-      "signal_dbm": -88,
-      "seen_s": "4 s",
+      "name": "N4 · Dry riverbed",
+      "lat": 26.853,
+      "lon": 84.236,
       "camera": "CAM 12",
-      "sensors": ["seismic", "pir"],
+      "radar": {
+        "model": "mmWave 60 GHz (simulated)",
+        "fov_deg": 120,
+        "range_m": 300,
+        "demo_range_m": 6,
+        "facing_deg": 15
+      },
+      "sensors": [
+        "mmwave_radar",
+        "thermal_camera"
+      ],
       "source_type": "sim"
     }
   ],
   "bops": [
     {
       "id": "BOP-1",
-      "name": "BOP-1 (Forward)",
-      "lat": 26.8440,
+      "name": "BOP-1 (SSB Forward)",
+      "lat": 26.844,
       "lon": 84.2335,
       "contact": "VHF-CH14 // QRT Alpha (6 pax)",
       "status": "ready"
@@ -84,45 +122,137 @@
   "geofences": [
     {
       "id": "geo-zone-a",
-      "name": "Zone A - N3 / N1",
+      "name": "Zone A · Forest track",
       "kind": "forest_track",
       "active_hours": "HIGH NIGHT PROBING ZONE",
       "risk_modifier": 25,
       "color": "#f59e0b",
       "polygon": [
-        [26.8510, 84.2220],
-        [26.8565, 84.2240],
-        [26.8555, 84.2305],
-        [26.8500, 84.2290]
+        [
+          26.851,
+          84.222
+        ],
+        [
+          26.8565,
+          84.224
+        ],
+        [
+          26.8555,
+          84.2305
+        ],
+        [
+          26.85,
+          84.229
+        ]
       ]
     },
     {
       "id": "geo-zone-b",
-      "name": "Zone B - N4 (offline)",
+      "name": "Zone B · Zero-line riverbed",
       "kind": "restricted",
       "active_hours": "RESTRICTED ZERO-ACCESS",
       "risk_modifier": 15,
       "color": "#ef4444",
       "polygon": [
-        [26.8510, 84.2330],
-        [26.8550, 84.2340],
-        [26.8540, 84.2410],
-        [26.8495, 84.2395]
+        [
+          26.851,
+          84.233
+        ],
+        [
+          26.855,
+          84.234
+        ],
+        [
+          26.854,
+          84.241
+        ],
+        [
+          26.8495,
+          84.2395
+        ]
       ]
     },
     {
       "id": "geo-zone-c",
-      "name": "Zone C - N2",
+      "name": "Zone C · Market crossing",
       "kind": "crossing_route",
       "active_hours": "08:00 - 18:00",
       "risk_modifier": -30,
       "color": "#10b981",
       "polygon": [
-        [26.8465, 84.2290],
-        [26.8495, 84.2305],
-        [26.8485, 84.2345],
-        [26.8455, 84.2330]
+        [
+          26.8465,
+          84.229
+        ],
+        [
+          26.8495,
+          84.2305
+        ],
+        [
+          26.8485,
+          84.2345
+        ],
+        [
+          26.8455,
+          84.233
+        ]
       ]
     }
-  ]
+  ],
+  "das_fiber": {
+    "id": "DAS-1",
+    "name": "Buried fiber (DAS) · deployment only",
+    "deployment_only": true,
+    "path": [
+      [
+        26.8538,
+        84.233
+      ],
+      [
+        26.853,
+        84.24
+      ],
+      [
+        26.8518,
+        84.247
+      ]
+    ]
+  },
+  "baseline_profile": {
+    "hour_bands": [
+      "00-05",
+      "05-08",
+      "08-18",
+      "18-20",
+      "20-24"
+    ],
+    "default": [
+      0.05,
+      0.3,
+      0.5,
+      0.3,
+      0.1
+    ],
+    "crossing_route": [
+      0.0,
+      0.4,
+      1.0,
+      0.4,
+      0.05
+    ],
+    "forest_track": [
+      0.02,
+      0.2,
+      0.4,
+      0.2,
+      0.05
+    ],
+    "restricted": [
+      0.0,
+      0.0,
+      0.05,
+      0.0,
+      0.0
+    ]
+  }
 }

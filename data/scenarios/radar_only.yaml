@@ -1,0 +1,9 @@
+name: "Radar Only (Clutter)"
+description: "02:00 · N4 radar flickers on a near-static return in the riverbed (wind / vegetation). CAM 12 wakes and sees nothing. Radar alone can never raise an alert."
+expected: "Logged, no alert · score 20 (camera gate)"
+clock: "2026-10-12T02:00:00+05:30"
+events:
+  - {at: 0.0, node: N4, type: radar, range_m: 180, bearing_deg: 20, speed_mps: -0.3, track_id: T4, confidence: 0.55}
+  - {at: 1.0, node: N4, type: radar, range_m: 178, bearing_deg: 21, speed_mps: 0.2, track_id: T4, confidence: 0.52}
+  - {at: 2.0, node: N4, type: radar, range_m: 179, bearing_deg: 20, speed_mps: 0.1, track_id: T4, confidence: 0.5}
+  - {at: 3.0, node: N4, type: vision, label: none, count: 0, confidence: 0.0, range_m: 179, bearing_deg: 20}

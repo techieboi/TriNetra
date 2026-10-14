@@ -1,4 +1,3 @@
-import os
 from pathlib import Path
 from typing import Union, Any, Optional
 from app.ml.base import BaseVisionModel, VisionDetectionResult
@@ -59,26 +58,27 @@ class VisionAdapter(BaseVisionModel):
             except Exception as e:
                 print(f"[VisionAdapter] Inference error: {e}. Falling back to synthetic detection.")
 
-        # Fallback / Synthetic Detection
+        # Fallback / Synthetic Detection: echo the scenario's detection with demo boxes
         detected_class = hint_class or "Person"
-        count = hint_count
+        count = hint_count if detected_class.lower() != "none" else 0
         confidence = 0.94 if "person" in detected_class.lower() else 0.87
-        
-        # Synthetic normalized bounding boxes for demo visuals
+
         if count >= 3:
             boxes = [[0.28, 0.35, 0.42, 0.78], [0.45, 0.32, 0.58, 0.81], [0.62, 0.38, 0.75, 0.84]]
         elif count == 2:
             boxes = [[0.35, 0.32, 0.48, 0.80], [0.55, 0.36, 0.68, 0.82]]
-        else:
+        elif count == 1:
             boxes = [[0.40, 0.30, 0.60, 0.82]]
+        else:
+            boxes = []
 
         return VisionDetectionResult(
             detected_class=f"{detected_class.capitalize()} ×{count}",
             count=count,
             confidence=confidence,
             bounding_boxes=boxes,
-            heading_deg=45.0,
-            snapshot_path=str(frame_or_path) if isinstance(frame_or_path, (str, Path)) else "/static/assets/thermal_intrusion_group.jpg",
+            heading_deg=None,
+            snapshot_path=str(frame_or_path) if isinstance(frame_or_path, (str, Path)) else None,
             is_live_model=False
         )
 

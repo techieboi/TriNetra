@@ -1,7 +1,7 @@
 import json
 import math
 from pathlib import Path
-from typing import Dict, Any, List, Tuple
+from typing import Dict, Any, List, Tuple, Optional
 from shapely.geometry import Point, Polygon
 
 DATA_PATH = Path(__file__).resolve().parent.parent / "data" / "zone.json"
@@ -66,6 +66,53 @@ class ZoneManager:
                 nearest = b
 
         return (nearest, round(min_dist, 2))
+
+    def get_node(self, node_id: str) -> Optional[Dict[str, Any]]:
+        node_id = self.normalize_node_id(node_id)
+        return next((n for n in self.data.get("nodes", []) if n["id"] == node_id), None)
+
+    @staticmethod
+    def normalize_node_id(node_id: str) -> str:
+        # Accept legacy "Z1-N3" style ids and "N3 · CAM 07" display names
+        return node_id.split("·")[0].strip().split("-")[-1]
+
+    @staticmethod
+    def project(lat: float, lon: float, range_m: float, bearing_deg: float) -> Tuple[float, float]:
+        """Point at range_m along bearing_deg from (lat, lon). Flat-earth is fine at radar ranges."""
+        b = math.radians(bearing_deg)
+        dlat = range_m * math.cos(b) / 111320.0
+        dlon = range_m * math.sin(b) / (111320.0 * math.cos(math.radians(lat)))
+        return round(lat + dlat, 6), round(lon + dlon, 6)
+
+    @staticmethod
+    def bearing_deg(lat1: float, lon1: float, lat2: float, lon2: float) -> float:
+        dy = (lat2 - lat1) * 111320.0
+        dx = (lon2 - lon1) * 111320.0 * math.cos(math.radians(lat1))
+        return (math.degrees(math.atan2(dx, dy)) + 360.0) % 360.0
+
+    def radar_sees(self, node: Dict[str, Any], lat: float, lon: float) -> Optional[Tuple[float, float]]:
+        """(range_m, bearing_deg) if the point is inside the node's radar wedge, else None."""
+        radar = node.get("radar")
+        if not radar:
+            return None
+        rng = self.haversine_km(node["lat"], node["lon"], lat, lon) * 1000.0
+        brg = self.bearing_deg(node["lat"], node["lon"], lat, lon)
+        off = abs((brg - radar["facing_deg"] + 180.0) % 360.0 - 180.0)
+        if rng <= radar["range_m"] and off <= radar["fov_deg"] / 2.0:
+            return round(rng, 1), round(brg, 1)
+        return None
+
+    def geofence_kind(self, lat: float, lon: float) -> Optional[str]:
+        matches = self.check_geofences(lat, lon)
+        return matches[0].get("kind") if matches else None
+
+    def expected_activity(self, lat: float, lon: float, hour: int) -> float:
+        """How normal any activity is at this place and hour (0 = never seen, 1 = routine)."""
+        profile = self.data.get("baseline_profile", {})
+        kind = self.geofence_kind(lat, lon) or "default"
+        row = profile.get(kind) or profile.get("default") or [0.5] * 5
+        band = 0 if hour < 5 else 1 if hour < 8 else 2 if hour < 18 else 3 if hour < 20 else 4
+        return float(row[band])
 
     @staticmethod
     def haversine_km(lat1: float, lon1: float, lat2: float, lon2: float) -> float:

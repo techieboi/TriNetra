@@ -1,3 +1,5 @@
+> **Superseded (Oct 14, 2026).** This plan predates the Oct 11 PRD (mmWave radar instead of vibration/PIR, no hardware in the demo, React dashboard). The current plan is [WEBSITE_FUNCTIONAL_REQUIREMENTS_AND_PLAN.md](WEBSITE_FUNCTIONAL_REQUIREMENTS_AND_PLAN.md). Kept for history.
+
 # TRINETRA — Software-First Demo Build Plan
 
 Oct 10, 2026 · @Ananya Negi

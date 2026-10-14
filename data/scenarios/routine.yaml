@@ -1,31 +1,17 @@
 name: "Routine Market Crossing (Daytime)"
-description: "Authorized civilian movement along marked crossing corridor during open market hours"
+description: "10:15 · N2 radar picks up villagers on the authorised crossing during market hours; CAM 05 confirms 4 people. Normal for this zone."
+expected: "Logged, no alert · score 5"
 clock: "2026-10-12T10:15:00+05:30"
 events:
-  - at: 0.0
-    node: "Z1-N2"
-    type: "vibration"
-    label: "footstep"
-    confidence: 0.82
-    lat: 26.8488
-    lon: 84.2352
-    source: "sim"
-  - at: 1.2
-    node: "Z1-N2"
-    type: "pir"
-    label: "motion"
-    confidence: 0.95
-    lat: 26.8488
-    lon: 84.2352
-    source: "sim"
-  - at: 2.5
-    node: "Z1-N2"
-    type: "vision"
-    label: "person"
+  - {at: 0.0, node: N2, type: radar, range_m: 95, bearing_deg: 100, speed_mps: -0.9, track_id: T2, confidence: 0.84}
+  - {at: 1.0, node: N2, type: radar, range_m: 88, bearing_deg: 102, speed_mps: -0.9, track_id: T2, confidence: 0.86}
+  - at: 2.0
+    node: N2
+    type: vision
+    label: person
     count: 4
     confidence: 0.89
     heading_deg: 90
-    lat: 26.8490
-    lon: 84.2350
-    source: "sim"
-    snapshot: "data/snapshots/market_pedestrians.jpg"
+    range_m: 80
+    bearing_deg: 105
+    clip: market

@@ -1,182 +1,130 @@
-# TRINETRA // OSINT-C2 Sentinel
+# TRINETRA
 
-> **Context-Aware Border Early-Warning Command & Control System**  
-> *Software-First Demo v1.0 — Inspired by Defense Intelligence & OSINT Project Osiris UI*  
-> 📄 **[Product Requirements Document (PRD.md)](PRD.md)** · 📋 **[Software-First Build Plan](TRINETRA%20—%20Software-First%20Demo%20Build%20Plan.md)**
+> **Context-aware border watch for unfenced stretches of the India–Nepal border.**
+> A radar node picks up movement, a thermal camera wakes and YOLO checks what it is, the zone check asks
+> "is this unusual here, at this hour?", and only then is the nearest SSB outpost alerted. A human decides.
+>
+> 📄 [PRD](PRD.md) · 📋 [Functional requirements & build plan](WEBSITE_FUNCTIONAL_REQUIREMENTS_AND_PLAN.md)
 
----
-
-## 🛰️ Overview
-
-On open, remote border tracts, movement is constant and normal. Thinly spread border outposts (BOPs) are frequently overwhelmed by single-sensor false alarms triggered by livestock, weather, or routine civilian traffic during market hours.
-
-**TRINETRA** changes the paradigm:
-- **Fuses Ground, Optical, and Simulated Aerial Signals:** Cross-modal agreement between geophones (vibration), passive infrared (PIR), and thermal/optical cameras.
-- **Context Over Raw Detection:** Evaluates time-of-day baselines, designated crossing corridors, restricted zero-line riverbeds, group sizes, and movement trajectories.
-- **Explainable AI (XAI) Scoring:** Every alert includes an itemized breakdown of exact positive and negative factors ($+30$ Night in quiet zone, $+25$ Off-route, $-40$ Wildlife suppression).
-- **Automated Outpost Dispatch Routing:** Directly computes straight-line distance, compass heading vector, and Quick Response Team (QRT) intercept ETA to the nearest Border Outpost.
-
----
-
-## 🎯 The Software-First Approach
-
-In hackathon and early defense-tech prototypes, physical sensor hardware (breadboards, wires, batteries, RF transceivers) creates a high point-of-failure surface during live presentations.
-
-TRINETRA’s core value is **not the sensor hardware, but the Contextual Intelligence Layer**:
-- **Zero Demo Breakage:** Deterministic, timed scenario files (`data/scenarios/*.yaml`) guarantee 100% repeatability for judges.
-- **Unified Event Contract:** Simulated nodes, live laptop webcams (YOLOv8), phone accelerometers (`/sensor`), and future ESP32 LoRa nodes emit the identical JSON event schema.
-- **No Login / Registration:** Jumps directly into the tactical command center for immediate operational situational awareness.
-
----
-
-## 🖥️ OSINT Project Osiris-Inspired UI Features
-
-- **Tactical Dark Space Theme:** Military C2 console aesthetics with glassmorphic panels, HUD gridlines, and real-time telemetry coordinates.
-- **Map-View & Satellite-View Switcher:**
-  - **Map View:** CartoDB Dark Matter tactical vector layer.
-  - **Satellite View:** High-resolution Esri World Imagery satellite layer for granular terrain and trail inspection.
-  - **Hotkeys:** Press `[M]` for Map View or `[S]` for Satellite View.
-- **Target Sector Z1 (Kali-Gandak Basin):** Small, focused operational bounding box ($\approx 1.5\text{ km}^2$, Lat 26.840–26.862° N, Lon 84.218–84.246° E).
-- **Tactical Geofences:**
-  - 🟢 **Authorized Market Crossing Corridor:** Open 08:00–18:00 ($-30$ threat modifier).
-  - 🔴 **Restricted Zero-Line Riverbed:** Strict 24/7 zero-access zone ($+15$ threat modifier).
-  - 🟡 **Forest Flank Track:** Unmonitored night infiltration route ($+25$ threat modifier).
-- **Sensor Nodes & Outpost:** Live pulse rings on sensor nodes (`Z1-N1` through `Z1-N4`), concentric security perimeter rings around `BOP Sutlej (Forward HQ)`.
-- **Explainable Threat Inspector:**
-  - Radial score gauge ($0–100$) and severity badges (`HIGH`, `REVIEW`, `LOG`).
-  - Itemized factor weight tally.
-  - FLIR white-hot thermal snapshot viewer with detection labels.
-  - Real-time animated canvas seismic frequency waveform visualizer.
-  - Tactical BOP intercept distance and QRT ETA.
-  - Operator triage actions (`CONFIRM & DISPATCH`, `DISMISS`, `ESCALATE`, `DRONE RECON`).
-- **Simulated Autonomous Drone Recon:** UAV flight animation from BOP to alert coordinates with simulated aerial thermal HUD feed modal.
-- **Append-Only Audit Trail:** Tamper-evident, timestamped decision and sensor event log.
-
----
-
-## 🚀 Step-by-Step Setup & Running Guide
-
-### 1. Prerequisites
-- **Python 3.10+** (Python 3.11 or 3.12 recommended)
-- **Git**
-- A modern browser (Chrome, Edge, Firefox, or Safari)
-
-### 2. Clone the Repository
-```bash
-git clone https://github.com/techieboi/TriNetra.git
-cd TriNetra
+```
+radar trigger → camera wakes → YOLO detects → unusual for this zone? ─yes→ alert nearest SSB outpost → operator sends drone / decides
+                                                                    └─no──→ log it, keep watching
 ```
 
-### 3. Create and Activate Virtual Environment
+**This is the demo build.** There is no hardware: every sensor input is simulated and labelled as such.
+The simulated radar node sends exactly the JSON a real mmWave module would, so real hardware later only needs
+to POST to `/api/ingest/event`.
 
-**Windows (PowerShell):**
-```powershell
+---
+
+## Run it
+
+Needs **Python 3.10+** and **Node 18+**.
+
+```bash
 python -m venv .venv
-.venv\Scripts\Activate.ps1
-```
-*(If PowerShell restricts scripts, run `.venv\Scripts\activate.bat` in CMD or run `Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass`)*
-
-**Linux / macOS:**
-```bash
-python3 -m venv .venv
-source .venv/bin/activate
-```
-
-### 4. Install Dependencies
-```bash
+.venv/Scripts/activate        # Windows (PowerShell: .venv\Scripts\Activate.ps1)
+source .venv/bin/activate     # macOS / Linux
 pip install -r requirements.txt
 ```
 
-### 5. Launch the TriNetra Server
 ```bash
-uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
+cd web
+npm install
+npm run build
+cd ..
 ```
 
-### 6. Open the Tactical Dashboard
-Open your web browser and navigate to:
-```
-http://localhost:8000
+```bash
+uvicorn app.main:app --port 8000
 ```
 
-- **Live Dashboard:** [http://localhost:8000](http://localhost:8000)
-- **Interactive REST API Docs:** [http://localhost:8000/docs](http://localhost:8000/docs)
-- **Raw Zone Telemetry Endpoint:** [http://localhost:8000/api/zone](http://localhost:8000/api/zone)
+Open **http://localhost:8000**. API docs are at `/docs`.
+
+**Developing the dashboard:** run the backend as above, then `npm run dev` in `web/` and open http://localhost:5173
+(hot reload; `/api`, `/ws` and `/media` are proxied to port 8000).
+
+**Tests:** `pip install -r requirements-dev.txt` then `pytest`. They check every scenario gives its expected result (intrusion 20 runs in a row).
+
+> Windows tip: if `shapely` fails with "filename too long", the project path is too deep. Create the venv in a short path (e.g. `C:\venvs\trinetra`).
 
 ---
 
-## 🎮 How to Test & Demo (Walkthrough)
+## Demo walkthrough
 
-### 1. Toggle Map vs. Satellite Imagery
-- Look at the top-left HUD over the map.
-- Click **SATELLITE VIEW** (or press `[S]`) to inspect satellite terrain imagery.
-- Click **MAP VIEW** (or press `[M]`) to switch back to the tactical dark vector map.
+Open **Demo controls** at the bottom.
 
-### 2. Run Demo Scenarios (Bottom Command Bar)
-Click any scenario button on the bottom HUD to test the context engine live:
-
-| Button | Scenario | What Happens | Expected Outcome |
-| :--- | :--- | :--- | :--- |
-| **🚨 NIGHT INTRUSION** | 3 infiltrators + motorcycle off-route at 02:40 AM | Charlie Node (`Z1-N3`) detects vibration, PIR, and thermal vision | **Score 100 (HIGH ALERT)**. Alarm sounds, routes to BOP Sutlej (1.48 km, ETA 5.9 min). |
-| **🚶 MARKET CROSSING** | 4 villagers on crossing corridor at 10:15 AM | Bravo Node (`Z1-N2`) detects footsteps and pedestrians | **Score 25 (LOG ONLY)**. Daytime market crossing rule suppresses alert; **0 false alarms**. |
-| **🐄 STRAY ANIMAL** | Livestock grazing near forest edge at 23:30 | Charlie Node (`Z1-N3`) detects movement; vision confirms cow | **Score 45 (REVIEW BAND)**. Animal suppression ($-40$) prevents high-priority alarm. |
-| **⚠️ SINGLE SENSOR** | Lone geophone vibration off-route at 02:00 AM | Delta Node (`Z1-N4`) detects vibration with no visual/PIR consensus | **Score 65 (REVIEW ONLY)**. Hard safety cap prevents lone sensor from raising High Alert. |
-| **📡 NODE OFFLINE** | Delta Node heartbeat drops | Sudden loss of telemetry | Node turns grey on the map; blind-spot warning issued. |
-
-### 3. Triage an Alert
-1. In the left **Threat Queue**, click on `ALT-... (HIGH)`.
-2. Review the **Explainable AI Factors** in the right-hand panel.
-3. Observe the **Optical/Thermal FLIR Snapshot** and live **Seismic Waveform Canvas**.
-4. Enter a note and click **CONFIRM & DISPATCH**, **DISMISS**, or **ESCALATE COMMAND**.
-5. Click **DRONE RECON** to dispatch an autonomous UAV reconnaissance flight and open the aerial FLIR feed modal.
-6. Click **AUDIT TRAIL** on the top header to inspect the complete append-only event record.
-
----
-
-## 📁 Repository Structure
-
-```
-TriNetra/
-├── app/                        # FastAPI Backend & Intelligence Core
-│   ├── main.py                 # FastAPI application, routes, WebSocket manager
-│   ├── schema.py               # Pydantic data models (Event, Alert, Incident, Action)
-│   ├── db.py                   # In-memory store & append-only audit logger
-│   ├── bus.py                  # Asynchronous event bus (asyncio.Queue)
-│   ├── zone.py                 # Shapely geo-math, geofencing & Haversine distance
-│   └── engine/
-│       ├── fusion.py           # Spatio-temporal event fusion (10s / 400m window)
-│       ├── context.py          # Baseline evaluator (time of day, routes, geofences)
-│       ├── scoring.py          # Explainable threat scoring & single-sensor safety cap
-│       ├── routing.py          # Nearest BOP routing & QRT ETA calculator
-│       └── scenario_player.py  # Asynchronous scenario player for YAML definitions
-├── data/
-│   ├── zone.json               # Sector Z1 coordinates, nodes, BOPs, and geofences
-│   ├── scenarios/              # intrusion.yaml, routine.yaml, animal.yaml, single_sensor.yaml, offline.yaml
-│   └── snapshots/              # Thermal and surveillance demonstration imagery
-├── static/                     # Frontend OSINT Dashboard
-│   ├── index.html              # Project Osiris-styled Command & Control dashboard
-│   ├── style.css               # Tactical dark theme styling & glassmorphic layout
-│   ├── app.js                  # Leaflet mapping, WebSocket sync, waveform animation, UI logic
-│   └── assets/                 # FLIR thermal and aerial drone reconnaissance imagery
-├── requirements.txt            # Python dependencies
-├── .gitignore                  # Git ignore rules (.venv, caches, etc.)
-├── PRD.md                      # Complete Product Requirements Document (v1.0)
-└── README.md                   # Project documentation
-```
-
----
-
-## 🔮 Hardware Upgrade Roadmap
-
-| Phase | Component | Software Integration |
+| Button | What happens | Expected |
 | :--- | :--- | :--- |
-| **Phase 1 (Current)** | Software-First Prototype | Virtual nodes + YAML scenarios + WebSocket dashboard |
-| **Phase 2** | Live Physical Inputs | Laptop webcam (YOLOv8) + smartphone accelerometer (`/sensor`) |
-| **Phase 3** | ESP32 Hardware Nodes | Geophone + HC-SR501 PIR publishing to Mosquitto MQTT broker bridge |
-| **Phase 4** | Field Defense Edge | LoRa SX1276 long-range mesh gateway + Jetson Nano thermal vision |
+| 🚨 Night Intrusion | N3 radar tracks a group closing in at 02:40, CAM 07 wakes, YOLO sees 3 people + a motorcycle heading into territory | **HIGH 100**, alarm, routed to BOP-1 |
+| 🚶 Market Crossing | N2 radar → CAM 05 sees 4 villagers on the authorised crossing at 10:15 | **Logged (5)**, no alert |
+| 🐄 Stray Animal | N3 radar → CAM 07 sees no person or vehicle | **Logged (20)**, camera check stops the false alarm |
+| 📶 Radar Only | N4 near-static radar flicker, CAM 12 sees nothing | **Logged (20)**, radar alone never alerts |
+| 📡 Node Offline | N4 heartbeat lost | N4 and its wedge go grey, blind-spot warning |
+| 🎯 Drive a target | Click the map to drop a person / vehicle / animal / clutter target; drag to move it | Whichever radar wedge covers it reports it and the full flow runs live |
+
+Then on an alert:
+1. Read the **pipeline strip** (which step decided what) and **Why this score** (every factor and weight).
+2. Watch the **camera tile** (looping prerecorded clip, or a placeholder until clips are added) and the **radar scope**.
+3. **Send drone for visual check**: operator click only; the drone flies from BOP-1 and the drone feed opens.
+4. **Confirm**, **Track**, **Need info**, or **Dismiss / Escalate** (note required). A dismissal lowers the score of similar future events.
+5. The header tracks **alert time** (radar trigger to dashboard) and the **false-alarm rate** (dismissed / decided). **Audit trail** shows every step.
+
+Hotkeys: `M` map, `S` satellite, `Esc` closes dialogs.
+
+### Virtual radar node (stands in for the hardware)
+
+```bash
+python sim/radar_node.py --node N3 --walk --clock night
+```
+
+Walks a target in through N3's radar wedge, sending readings at 5 Hz and one camera result, through the same
+ingest endpoint a real node would use. `--label none` makes the camera see nothing; `--heartbeat-only` just keeps the node alive.
 
 ---
 
-## ⚖️ Safeguards & Privacy (FR-31 / NFR-5)
-- **Zero Facial Recognition:** TRINETRA detects object classes (`person`, `vehicle`, `cow`), never individual identities or demographic attributes.
-- **Human-in-the-Loop:** No autonomous kinetic or dispatch action leaves the system without human operator confirmation.
-- **Honesty in Demonstration:** All simulated, replayed, and live sources are clearly flagged across the UI.
+## Adding the prerecorded clips
+
+Drop `intrusion.mp4`, `market.mp4`, `animal.mp4`, `night_corridor.mp4`, `drone_recon.mp4` (and optionally
+`live_person.mp4`, `live_vehicle.mp4`) into `data/media/clips/`. They play muted on loop in the alert's camera tile.
+Optional `<clip>.json` files add per-frame YOLO boxes. See [data/media/clips/README.md](data/media/clips/README.md).
+
+## Adding trained models
+
+Drop weights into `app/ml/weights/` and restart: `vision_thermal.pt` (YOLO fine-tuned on HIT-UAV + LLVIP),
+`baseline_iso.joblib` (zone anomaly Isolation Forest), optionally `radar_clf.joblib`.
+`GET /api/models/status` shows what's live. See [app/ml/weights/README.md](app/ml/weights/README.md).
+
+---
+
+## Repository layout
+
+```
+app/
+  main.py                 FastAPI app: engine loop, camera wake states, heartbeats, REST + WebSocket
+  schema.py               Event / Incident / Alert models (one event schema for every input)
+  zone.py                 Zone geometry: geofences, radar wedges, baseline routine, nearest BOP
+  db.py                   In-memory store, audit log, PRD metrics
+  engine/
+    pipeline.py           The PRD flow, end to end
+    fusion.py             Groups a radar track and its camera result into one incident
+    context.py            What the sensors saw, where, and when
+    scoring.py            Zone check: explainable factors, camera gate, bands, pipeline steps
+    routing.py            Nearest SSB outpost, distance, QRT ETA
+    scenario_player.py    Plays data/scenarios/*.yaml
+  ml/                     Model adapters (vision, radar, anomaly) with fallbacks + weights/
+data/
+  zone.json               Sector G2 · Gandak: nodes + radar wedges, BOP, geofences, fiber line, baseline routine
+  scenarios/              Demo scenarios
+  seed/                   Reference history loaded on start / reset
+  media/                  snapshots/ and clips/ (served at /media)
+sim/radar_node.py         Virtual mmWave node
+tests/                    Scenario outcome tests
+web/                      React dashboard (Vite + TypeScript + Leaflet)
+```
+
+## Principles
+
+- **Detect anomalies, not people.** No face recognition, identity or nationality inference anywhere.
+- **Humans decide.** Alerts recommend; the operator confirms, dismisses, escalates and sends the drone.
+- **Honest labels.** Simulated inputs, placeholders and prerecorded clips are always marked.

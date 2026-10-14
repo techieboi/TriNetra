@@ -1,31 +1,17 @@
-name: "Stray Wildlife / Animal Movement"
-description: "Night animal movement near forest edge; classified as cow/livestock with low threat suppression"
+name: "Stray Animal near Forest Edge"
+description: "23:30 · N3 radar picks up slow movement; CAM 07 wakes but YOLO (HIT-UAV + LLVIP classes) finds no person or vehicle. Camera check stops the false alarm."
+expected: "Logged, no alert · score 20 (camera gate)"
 clock: "2026-10-12T23:30:00+05:30"
 events:
-  - at: 0.0
-    node: "Z1-N3"
-    type: "vibration"
-    label: "animal_hoof"
-    confidence: 0.77
-    lat: 26.8538
-    lon: 84.2292
-    source: "sim"
-  - at: 1.0
-    node: "Z1-N3"
-    type: "pir"
-    label: "motion"
-    confidence: 0.88
-    lat: 26.8538
-    lon: 84.2292
-    source: "sim"
-  - at: 2.2
-    node: "Z1-N3"
-    type: "vision"
-    label: "cow"
-    count: 1
-    confidence: 0.92
-    heading_deg: 45
-    lat: 26.8540
-    lon: 84.2290
-    source: "sim"
-    snapshot: "data/snapshots/thermal_livestock.jpg"
+  - {at: 0.0, node: N3, type: radar, range_m: 210, bearing_deg: 60, speed_mps: -0.6, track_id: T3, confidence: 0.78}
+  - {at: 1.0, node: N3, type: radar, range_m: 204, bearing_deg: 61, speed_mps: -0.6, track_id: T3, confidence: 0.8}
+  - at: 2.0
+    node: N3
+    type: vision
+    label: none
+    count: 0
+    confidence: 0.0
+    range_m: 200
+    bearing_deg: 62
+    snapshot: "/media/snapshots/thermal_livestock.jpg"
+    clip: animal

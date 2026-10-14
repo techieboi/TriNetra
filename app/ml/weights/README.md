@@ -1,19 +1,22 @@
 # Trained Model Weights Directory
 
-Drop your trained model weights into this directory to automatically activate live inference across the TriNetra C2 product:
+Drop trained weights here and TriNetra switches from its fallback to live inference on the next start.
 
-1. **Vision Model (YOLOv8 / YOLO11)**:
+1. **Vision model (YOLO, fine-tuned on HIT-UAV + LLVIP thermal)**
    - File: `vision_thermal.pt`
    - Framework: Ultralytics YOLO (`pip install ultralytics`)
-   - Classes: `person`, `motorcycle`, `vehicle`, `animal`, `boat`
+   - Classes the pipeline treats as a confirmed target: `person`, `car`, `bicycle`, `motorcycle`, `othervehicle`, `truck`, `boat`.
+     Anything else (or no detection) is logged, not alerted.
 
-2. **Ground Vibration / Seismic Classifier**:
-   - File: `vibration_clf.joblib`
-   - Framework: Scikit-learn / Joblib (`pip install scikit-learn joblib`)
-   - Output classes: `footstep`, `vehicle`, `animal`, `noise`
+2. **Radar track classifier (optional)**
+   - File: `radar_clf.joblib`
+   - Framework: scikit-learn / joblib
+   - Features: `[mean |radial speed|, speed std-dev, range change]` → label (`walking`, `vehicle`, `static`)
+   - Without it, speed thresholds are used (≤ 2.5 m/s walking, above that vehicle).
 
-3. **Context Anomaly Scorer (Isolation Forest)**:
+3. **Zone anomaly scorer (Isolation Forest)**
    - File: `baseline_iso.joblib`
-   - Framework: Scikit-learn (`IsolationForest`)
+   - Features: `[hour, expected_activity, count, in_corridor]` (expected_activity comes from `baseline_profile` in `data/zone.json`)
+   - Without it, the anomaly score is computed from the zone baseline directly.
 
-If any file is absent, TriNetra automatically operates with its built-in high-fidelity synthetic fallback provider so all UI features, alerts, waveforms, and scenarios remain 100% functional without throwing errors.
+`GET /api/models/status` shows which models are live and which are on fallback.

@@ -1,257 +1,212 @@
-# TRINETRA Sentinel C2 — Website Functional Requirements & Plug-and-Play Implementation Plan
+# TRINETRA — Functional Requirements & Build Plan (v2)
 
-## 1. System Architecture & Layout Philosophy
+Aligned with the Oct 11 PRD ([PRD.md](PRD.md)) and the Oct 14 demo decisions (PRD §10):
+radar-triggered, camera-confirmed, zone-aware alerting; operator-clicked drone; prerecorded looping clips;
+no hardware (simulated radar node); React dashboard.
 
-### Preserving the Dashboard Layout
-The current **3-Column Tactical Command & Control (C2)** workspace layout inspired by defense intelligence interfaces remains strictly intact:
-- **Top Header:** Global telemetry, sector metadata, IST digital clock, live WebSocket connection state, audit log trigger, and operator shift indicator.
-- **Left Column:** Threat Alert Queue (with severity tab filters) and Sensor Node Health Table (battery, signal dBm, last ping).
-- **Center Column:** Tactical Leaflet Map (Map HUD bar with Satellite/Vector switcher, dynamic coordinates/MGRS, Tactical North, interactive geofences, node pulses, BOP rings, dynamic High-Alert banner) and bottom streaming Sensor Log.
-- **Right Column:** Full-height Threat & Tactical C2 Inspector (Target/seen/heading/node/distance/ETA grid, thermal/optical camera feed with detection overlays, Explainable AI itemized score breakdown, operator triage buttons, and primary UAV/QRT dispatch button).
-- **Footer Drawer:** Collapsible Scenario Simulation & Demo Control Bar.
-- **Overlays & Modals:** Full-resolution surveillance camera viewer modal and append-only audit trail modal.
+Status key: ✅ built · 🎞 built, waiting for media · 🔜 next · 🚫 out of scope for the demo
 
-While the layout structure remains fixed, **the interactive elements within every panel will be fully functionalized**, eliminating hardcoded dummy values and replacing static stubs with live WebSocket synchronization, responsive state handlers, and automated fallbacks.
+---
+
+## 1. Architecture
 
 ```mermaid
-graph TD
-    subgraph Inputs ["Data Ingestion & Virtual Nodes"]
-        Sim["Scenario Engine (YAML)"]
-        Cam["Live Camera / Video Replay"]
-        Phone["Phone Sensor / Live Vibration"]
+flowchart LR
+    subgraph Inputs["Inputs (one event schema, labelled by source)"]
+        SP["Scenario player<br/>data/scenarios/*.yaml"]
+        VN["Virtual radar node<br/>sim/radar_node.py"]
+        DT["Drive-a-target<br/>map click → /api/sim/target"]
+        HW["Real mmWave node (later)<br/>POST /api/ingest/event"]
     end
-
-    subgraph Adapters ["Plug-and-Play Model Adapters"]
-        YOLO["Vision Adapter (YOLOv8 / YOLO11)<br/><i>Fallback: Annotated Synthetic Clip</i>"]
-        VIB["Vibration Adapter (1D-CNN / Random Forest)<br/><i>Fallback: Spectral Waveform Mock</i>"]
-        ISO["Anomaly Scorer (Isolation Forest)<br/><i>Fallback: Synthetic Baseline Score</i>"]
+    subgraph Backend["FastAPI backend (app/)"]
+        BUS["Event bus"]
+        PIPE["pipeline.py<br/>fusion → context → zone check → routing"]
+        ML["Model adapters<br/>vision · radar · anomaly"]
+        STORE["Store + audit log + metrics"]
     end
-
-    subgraph Core ["TriNetra Backend Core"]
-        Bus["Event Bus (asyncio.Queue)"]
-        Fusion["Spatio-Temporal Fusion (10s, 300m)"]
-        Context["Context & Geofence Engine"]
-        Scoring["Explainable Scoring Engine"]
-        Routing["Nearest BOP Haversine Routing"]
-        Audit["Append-Only Audit Store"]
+    subgraph UI["React dashboard (web/)"]
+        MAP["Map: wedges, radar returns, alerts, drone"]
+        PANEL["Alert panel: pipeline, clip, radar scope, reasons, actions"]
     end
-
-    subgraph Frontend ["Fixed 3-Column Tactical C2 Dashboard"]
-        Col1["Left Column: Queue & Sensor Health"]
-        Col2["Center Column: Leaflet Map & Event Log"]
-        Col3["Right Column: Threat Inspector & Dispatch"]
-        Modals["Recon Modal & Audit Trail"]
-    end
-
-    Inputs --> Adapters
-    Adapters --> Bus
-    Bus --> Fusion
-    Fusion --> Context
-    Context --> Scoring
-    Scoring --> Routing
-    Routing --> Audit
-    Audit --> Frontend
+    SP & VN & DT & HW --> BUS --> PIPE
+    PIPE <--> ML
+    PIPE --> STORE -->|WebSocket /ws| UI
+    UI -->|REST: actions, drone, scenarios| Backend
 ```
 
----
+### Event contract (all inputs)
 
-## 2. Functional Requirements for the Website
-
-### A. Global Header & Tactical Navigation
-| ID | Requirement | Acceptance Criteria |
-| :--- | :--- | :--- |
-| **FR-W1** | **Dynamic Link Status & Sync Indicator** | The link status badge in the header must reflect actual WebSocket connection state (`Online · synced <Xs ago>`, `Reconnecting...`, `Offline`). Reconnection must attempt exponentially every 2–5 seconds upon network interruption. |
-| **FR-W2** | **IST Master Telemetry Clock** | The header clock (`#clock-ist`) must tick continuously at 1 Hz in Indian Standard Time (`HH:MM:SS IST`). |
-| **FR-W3** | **Audit Trail Modal Launcher** | Clicking `#btn-audit-trail` must fetch `/api/audit` and populate the modal with a chronological, searchable table of timestamped operator actions, automated engine alerts, and sensor events. Pressing `Escape` or clicking the close button dismisses it. |
-| **FR-W4** | **Operator Shift Identity** | Operator badge displays active session credentials (`Op. R. Sharma · Shift B`), which auto-attaches to all logged triage actions. |
-
----
-
-### B. Left Column: Threat Queue & Sensor Health Table
-| ID | Requirement | Acceptance Criteria |
-| :--- | :--- | :--- |
-| **FR-W5** | **Dynamic Alert Queue Rendering** | Alerts received via WebSocket or initial payload render as reactive queue cards displaying ID, score badge, target class, primary node, creation elapsed time, BOP ETA, and status indicator (`Pending`, `Tracked`, `Dispatched`, `Dismissed`). |
-| **FR-W6** | **Severity Band Filtering** | Clicking filter tabs (`All`, `High (70+)`, `Review (40–69)`, `Log (<40)`) filters the queue in real-time without page reload, updating the active count badge. |
-| **FR-W7** | **Queue Selection Synchronization** | Clicking any card in the queue marks it with `.selected`, updates the Right Column C2 panel with that alert's parameters, and smoothly pans the Leaflet map (`panTo`) to the alert's coordinates. |
-| **FR-W8** | **Live Sensor Health Monitoring** | Sensor health table dynamically syncs with node states (`N1` to `N4`). When heartbeat events arrive, update battery percentage and signal dBm. If a node heartbeats times out or goes offline, display a high-visibility amber/red `OFFLINE` badge and pulse warning on the map. |
-
----
-
-### C. Center Column: Tactical Leaflet Map & Live Sensor Log
-| ID | Requirement | Acceptance Criteria |
-| :--- | :--- | :--- |
-| **FR-W9** | **Dual Vector & Satellite Layer Switcher** | Toggling the Map HUD pills (`Map` / `Satellite`) or pressing hotkeys `[M]` / `[S]` switches base layers seamlessly between CartoDB Dark Matter and Esri High-Resolution World Imagery without losing overlays. |
-| **FR-W10** | **Real-Time Cursor Readout** | Mouse movements over the map update `#map-cursor-coords` with 4-decimal latitude/longitude and simulated MGRS tactical grid coordinates. |
-| **FR-W11** | **Geofence & Sector Overlays** | Automatically render the Kali-Gandak international border line, BOP concentric security rings, and colored tactical geofences (Green: Market Crossing Corridor, Red: Restricted Zero-Line Riverbed, Yellow: Forest Track) with tooltips showing active operating hours and risk modifiers. |
-| **FR-W12** | **Dynamic Threat Markers & Pulse Rings** | Active alerts place a pulsing tactical marker on the map color-coded by severity band (Red: High, Amber: Review). Clicking an alert pin on the map selects that alert in the queue and threat inspector. |
-| **FR-W13** | **Interactive High-Alert Banner** | When an unacknowledged High Alert (score $\ge 70$) is active, `#map-alert-banner` pulses red in the Map HUD showing the alert ID and score. Clicking the banner centers the camera onto the threat. When all high alerts are resolved, the banner transitions to a neutral idle state. |
-| **FR-W14** | **Streaming Sensor Event Log** | The bottom sensor log panel streams raw events (vibration, PIR, vision detections, heartbeat losses) chronologically with color tags (`warning`, `info`, `high`, `operator`, `drone`). New items prepend/append smoothly with autoscroll. |
-
----
-
-### D. Right Column: Threat Inspector & Explainable AI (XAI)
-| ID | Requirement | Acceptance Criteria |
-| :--- | :--- | :--- |
-| **FR-W15** | **Tactical Metadata Readout Grid** | Displays exact target classification (`Person ×3`, `Motorcycle ×1`, `Livestock`), elapsed time, heading degrees with cardinal vector (`045° · NE`), reporting node/cam, straight-line distance to nearest BOP in km, and computed QRT intercept ETA in minutes. |
-| **FR-W16** | **Camera Telemetry Viewport & Modal** | Embedded viewport displays the optical/thermal surveillance snapshot with active camera name (`CAM 07 · Thermal`), live status pill, and timestamp. Clicking the viewport or `#btn-open-cameras` opens the expanded full-screen inspection modal with crosshair telemetry overlay and bounding box annotations. |
-| **FR-W17** | **Explainable AI (XAI) Factor Breakdown** | Renders an itemized list of rule and context factors contributing to the threat score (e.g., `Night-time sector +30`, `Off authorised crossing route +25`, `Group of 3 or more +7`, `Wildlife suppression -40`). Every score change displays positive (+) and negative (-) weights that sum to the total score. |
-| **FR-W18** | **Multi-Modal Confidence Indicator** | Displays individual model/sensor confidence percentages (e.g., `Thermal Vision 94% · PIR Motion 88% · Seismic Footfall 81%`), computed dynamically from the fused events. |
-| **FR-W19** | **Real-Time Seismic Waveform Canvas** | Embed an animated HTML5 2D canvas visualizer simulating or displaying real-time geophone vibration frequencies (harmonic footfall spikes vs ambient noise vs vehicle thrum). |
-
----
-
-### E. Operator Decision & Response Lifecycle
-| ID | Requirement | Acceptance Criteria |
-| :--- | :--- | :--- |
-| **FR-W20** | **Operator Triage Actions (Triage Card Group)** | Provide accessible operator action triggers: **Confirm**, **Dismiss** (with mandatory justification note modal/prompt), **Escalate**, and **Track / Need Info**. |
-| **FR-W21** | **Feedback Loop on Dismissal** | Dismissing an alert posts to `/api/alerts/{id}/actions` with action `dismiss` and note. The backend engine updates baseline suppression for similar events (same node, hour band, class), immediately reflected in the audit log. |
-| **FR-W22** | **High-Priority Audio Cue** | When a score $\ge 70$ alert arrives over WebSocket, trigger an audible tactical warning beep (Web Audio API synth oscillator, respecting browser autoplay policies via initial user click enablement). |
-| **FR-W23** | **One-Click Primary UAV & QRT Dispatch** | Clicking `#btn-action-dispatch` triggers `/api/alerts/{id}/drone`. The button updates to `DISPATCHED ✓`, and launches the autonomous drone reconnaissance animation. |
-
----
-
-### F. Autonomous Drone Reconnaissance Simulation
-| ID | Requirement | Acceptance Criteria |
-| :--- | :--- | :--- |
-| **FR-W24** | **Map Flight Trajectory Animation** | Disagreeing or dispatched alerts initiate an animated UAV icon flying from BOP-1 to the target alert coordinates over a 6-second trajectory on the Leaflet map. |
-| **FR-W25** | **Aerial FLIR Reconnaissance Feed Modal** | Upon arrival, open an aerial recon HUD modal playing the simulated thermal UAV video/feed (`drone_recon.jpg` / video clip) with `SIMULATED DRONE RECON` watermark and live telemetry coordinates. |
-
----
-
-### G. Demo Scenario Orchestration (Footer Bar)
-| ID | Requirement | Acceptance Criteria |
-| :--- | :--- | :--- |
-| **FR-W26** | **Full Scenario Matrix Triggers** | Populate the footer drawer with one-click buttons for all five scenarios: **🚨 Night Intrusion**, **🚶 Market Crossing**, **🐄 Stray Animal**, **⚠️ Single Sensor**, and **📡 Node Offline**. |
-| **FR-W27** | **Simulation Playback Speed Multiplier** | Speed selector dropdown (`1x`, `2x`, `4x`) passes the speed multiplier to `/api/scenarios/{name}/run`, speeding up timed event emission accordingly. |
-| **FR-W28** | **One-Click Baseline Sandbox Reset** | Clicking `#btn-reset-sandbox` triggers `/api/demo/reset`, clearing active incidents, resetting node health to baseline, and restoring reference state across all connected clients via WebSocket broadcast. |
-
----
-
-## 3. Plug-and-Play Model Architecture & Interface Contracts
-
-To allow your trained ML models to plug directly into TRINETRA without modifying website templates, styling, or API plumbing, the backend features a **Model Provider Abstraction Layer**:
-
-```
-app/
-├── ml/
-│   ├── base.py                   # Abstract Base Classes for all models
-│   ├── vision_adapter.py         # YOLOv8 / YOLO11 adapter (loads weights or falls back)
-│   ├── vibration_adapter.py      # Seismic classifier adapter (loads weights or falls back)
-│   ├── anomaly_adapter.py        # Isolation Forest baseline scorer (loads weights or falls back)
-│   └── weights/                  # DROP-IN DIRECTORY for trained models
-│       ├── vision_thermal.pt     # Place your trained YOLO weights here
-│       ├── vibration_clf.joblib  # Place your trained vibration model here
-│       └── baseline_iso.joblib   # Place your trained Isolation Forest model here
+```json
+{ "event_id": "EV-1A2B3C", "node_id": "N3", "zone_id": "G2", "type": "radar",
+  "ts": "2026-10-12T02:40:00+05:30", "source": "sim",
+  "range_m": 180, "speed_mps": -1.3, "bearing_deg": 41, "track_id": "T1", "confidence": 0.9 }
 ```
 
-### 1. Vision Model Contract (`VisionModelAdapter`)
-- **Trained Model Target:** Ultralytics YOLOv8 / YOLO11 (e.g., `best.pt` trained on thermal / night optical datasets: FLIR ADAS, LLVIP, HIT-UAV).
-- **Interface Contract:**
-```python
-class VisionDetectionResult(BaseModel):
-    detected_class: str          # "person", "motorcycle", "vehicle", "animal", "boat"
-    count: int                   # number of instances detected
-    confidence: float            # 0.0 to 1.0
-    bounding_boxes: List[List[float]] # [[x1, y1, x2, y2], ...] normalized
-    heading_deg: Optional[float] # estimated heading if tracking enabled
-    snapshot_path: str           # path to rendered frame with bounding boxes
+| `type` | Extra fields | Notes |
+| :--- | :--- | :--- |
+| `radar` | `range_m`, `speed_mps` (negative = approaching), `bearing_deg`, `track_id` | Position is derived from the node + range + bearing if `lat`/`lon` are missing |
+| `vision` | `label`, `count`, `confidence`, `heading_deg`, `snapshot`, `clip`, `bounding_boxes` | `label: "none"` = camera looked, saw no person or vehicle |
+| `heartbeat` | `battery`, `signal_dbm` | Every 10 s; silent for 30 s → node offline |
+| `heartbeat_timeout` | — | Forces a node offline (used by the Node Offline scenario) |
+| `das` | `label` | Reserved for fiber sensing; not scored in the demo |
 
-class BaseVisionModel(ABC):
-    @abstractmethod
-    def predict(self, frame_or_path: Union[str, np.ndarray]) -> VisionDetectionResult:
-        pass
-```
-- **Fallback Behavior:** If `models/weights/vision_thermal.pt` is not present, the adapter automatically loads pre-extracted scenario detections and thermal snapshots (`static/assets/thermal_intrusion_group.jpg`, etc.) with zero runtime exceptions. When the `.pt` file is dropped into `weights/`, it automatically switches to live Ultralytics inference.
-
-### 2. Vibration/Seismic Classifier Contract (`VibrationClassifierAdapter`)
-- **Trained Model Target:** 1D-CNN or Scikit-Learn (Random Forest / Gradient Boosted Trees) trained on 2-second vibration windows (features: FFT peaks, RMS energy, zero-crossing rate, spectral centroid).
-- **Interface Contract:**
-```python
-class VibrationClassificationResult(BaseModel):
-    label: str                  # "footstep", "vehicle", "animal", "noise"
-    confidence: float           # 0.0 to 1.0
-    spectral_energy: float      # normalized energy value for waveform visualizer
-    waveform_samples: List[float] # 100-point normalized frequency/time series for UI canvas
-
-class BaseVibrationClassifier(ABC):
-    @abstractmethod
-    def classify(self, window_data: Union[List[float], np.ndarray]) -> VibrationClassificationResult:
-        pass
-```
-- **Fallback Behavior:** If `vibration_clf.joblib` is not present, deterministic synthetic waveforms and features mapped to the scenario events are emitted. When the `.joblib` model is added, live window classification runs instantly.
-
-### 3. Context Anomaly Scorer Contract (`AnomalyScorerAdapter`)
-- **Trained Model Target:** Scikit-Learn `IsolationForest` or Elliptic Envelope trained on 30-day baseline hourly event frequencies.
-- **Interface Contract:**
-```python
-class AnomalyScoreResult(BaseModel):
-    anomaly_score: int          # 0 to 100
-    is_outlier: bool
-    cluster_distance: float
-
-class BaseAnomalyScorer(ABC):
-    @abstractmethod
-    def score_incident(self, hour: int, zone_id: str, sensor_count: int, duration_s: float) -> AnomalyScoreResult:
-        pass
-```
-- **Fallback Behavior:** Emits rule-correlated anomaly scores until the trained joblib model is supplied.
+`source` is `sim`, `replay` or `live`. A real node only needs to POST this JSON.
 
 ---
 
-## 4. Step-by-Step Implementation Plan
+## 2. Pipeline and scoring (PRD §5)
 
-### Phase 1: Model Abstraction Layer & Drop-in Weight Registry
-- Create `app/ml/` directory structure with `base.py`, `vision_adapter.py`, `vibration_adapter.py`, `anomaly_adapter.py`, and `weights/`.
-- Implement auto-discovery in adapters:
-  - Check if `weights/vision_thermal.pt` exists $\to$ load Ultralytics `YOLO(weights)`; otherwise activate synthetic vision provider.
-  - Check if `weights/vibration_clf.joblib` exists $\to$ load `joblib.load()`; otherwise activate synthetic waveform provider.
-  - Check if `weights/baseline_iso.joblib` exists $\to$ load anomaly scorer; otherwise use heuristic fallback.
-- Add diagnostic endpoint `GET /api/models/status`.
+`app/engine/pipeline.py` runs every event through the PRD flow:
 
-### Phase 2: Backend Event Pipeline & Data Schema Polish
-- Extend `app/schema.py`:
-  - Add `waveform_samples: Optional[List[float]]` and `confidence_breakdown: Optional[Dict[str, float]]` to `Alert` and `Event`.
-  - Add full action set (`confirm`, `dismiss`, `escalate`, `need_info`, `drone_check`) to `OperatorAction`.
-- Connect `app/engine/fusion.py` and `app/engine/scoring.py` to call the ML adapters cleanly during event processing.
-- Update `app/main.py`:
-  - Add full scenario runner endpoints for all 5 scenarios.
-  - Implement audio cue signal in WebSocket alert broadcasts.
-  - Implement dismissal feedback weight modification in `scoring.py`.
+1. **Radar trigger.** Opens or extends an incident (same zone, 10 s window by arrival time, ~400 m). Camera goes `standby → waking`.
+2. **Camera wake.** The next `vision` event from that node sets the camera to `recording`.
+3. **YOLO detect.** A target is confirmed only for classes the HIT-UAV + LLVIP model can output: person, car, bicycle, motorcycle, other vehicle, truck, boat.
+4. **Unusual for this zone?** Zone check against the zone's baseline routine (`baseline_profile` in `data/zone.json`).
+5. **Outcome.** Score ≥ 40 → alert to the nearest SSB outpost (BOP). Otherwise logged, zone keeps watching.
 
-### Phase 3: Dashboard Center Column & Leaflet Map Enhancements
-*(Preserving existing layout while making all elements live and interactive)*
-- Connect `#btn-map-view` and `#btn-satellite-view` buttons to persist and toggle Leaflet base layers with smooth tile crossfade.
-- Link mouse movement over Leaflet map to `#map-cursor-coords` updating decimal degrees and MGRS coords in real-time.
-- Wire the `#map-alert-banner` to display the active highest-priority alert dynamically or fade out to idle.
-- Animate tactical UAV marker flight across the map from BOP coordinates to alert coordinates upon drone dispatch.
-- Enhance bottom `#sensor-log-box` with autoscroll, filtering, and timestamp format matching the IST master clock.
+### Zone-check factors (score = sum of listed factors, clamped 0–100)
 
-### Phase 4: Left & Right Column Interactive C2 Elements
-*(Preserving existing layout while functionalizing all controls)*
-- **Left Column (Alert Queue & Health Table):**
-  - Wire queue filtering tabs (`All`, `High`, `Review`, `Log`) to state filtering.
-  - Sync Sensor Health Table rows dynamically via WebSocket node updates (battery, dBm, `OFFLINE` alerts).
-- **Right Column (Threat Inspector & Waveform):**
-  - Inject HTML5 animated canvas into the Threat Inspector to render live seismic frequency waveforms.
-  - Render itemized XAI factor rows with positive/negative pill formatting.
-  - Dynamic multi-modal confidence line (`Thermal 94% · PIR 88% · Seismic 81%`).
-  - Wire operator decision buttons (**Pending**, **Tracked**, **Confirm**, **Dismiss** with reason modal, **Escalate**).
-  - Hook `#btn-action-dispatch` to trigger UAV recon flight and aerial modal popup.
-- **Modals & Overlays:**
-  - Enhance `#modal-cam-view` with bounding box visualizer and thermal telemetry OSD.
-  - Enhance `#modal-audit-trail` with searchable, filterable logs and CSV export.
+| Factor | Weight | When |
+| :--- | ---: | :--- |
+| Night-time, low-traffic sector | +30 | 20:00–05:00 and baseline activity ≤ 0.1 at that place |
+| Off authorised crossing route | +25 | Not inside the market-crossing geofence |
+| Inside restricted zero-line geofence | +15 | Riverbed zone |
+| Authorised crossing during market hours | −30 | Crossing geofence, 08:00–18:00 |
+| Thermal camera confirms person/vehicle | +20 | YOLO target class |
+| Group of N | +10 | Confirmed count ≥ 3 |
+| Heading into territory | +10 | Heading 130°–230° |
+| Radar: target closing in | +5 | Track range decreasing, not static |
+| Operator dismissed similar pattern before | −10 per dismissal (max −30) | Same node, 3-hour band, class |
+| **Gate:** radar only, awaiting camera | caps at 39 | No camera result yet |
+| **Gate:** camera saw no person or vehicle | caps at 20 | Animal / clutter / empty frame |
 
-### Phase 5: Complete Scenario Matrix & Footer Demo Drawer
-- Update footer HTML drawer with all 5 scenario buttons:
-  - 🚨 Night Intrusion (`intrusion.yaml`)
-  - 🚶 Market Crossing (`routine.yaml`)
-  - 🐄 Stray Animal (`animal.yaml`)
-  - ⚠️ Single Sensor (`single_sensor.yaml`)
-  - 📡 Node Offline (`offline.yaml`)
-- Link `#sel-scenario-speed` to scenario player execution interval.
-- Verify that each scenario runs deterministically and reproduces the exact expected score and alert band.
+Bands: **High ≥ 70** (sound cue, banner), **Review 40–69**, **Log < 40** (no alert).
+The zone anomaly score (Isolation Forest, or the baseline fallback) is shown beside the rule score.
 
-### Phase 6: Model Drop-in Validation & End-to-End Verification
-- Verify the entire system functions smoothly with zero missing dependencies in fallback mode.
-- Test dropping sample YOLO weights into `app/ml/weights/vision_thermal.pt` to verify hot-swapping to live model inference without UI disruption.
-- Validate browser compatibility, audio cue behavior, and layout stability at standard 1366×768 resolution.
+### Scenario outcomes (checked by `tests/test_scenarios.py`; intrusion runs 20×)
+
+| Scenario | Flow | Result |
+| :--- | :--- | :--- |
+| 🚨 Night Intrusion (N3, 02:40) | radar closing → CAM 07 → person ×3 + motorcycle | **HIGH 100**, BOP-1 |
+| 🚶 Market Crossing (N2, 10:15) | radar → CAM 05 → person ×4 on corridor in market hours | **Logged, 5** |
+| 🐄 Stray Animal (N3, 23:30) | radar → CAM 07 → no person/vehicle | **Logged, 20** (camera gate) |
+| 📶 Radar Only (N4, 02:00) | flickering near-static return → CAM 12 sees nothing | **Logged, 20** (camera gate) |
+| 📡 Node Offline | N4 heartbeat lost | N4 grey, blind-spot warning |
+
+---
+
+## 3. Simulating the hardware (no hardware in the demo)
+
+| Piece | What judges see | Where |
+| :--- | :--- | :--- |
+| Virtual radar node | Same JSON as a real module, ~5 readings/s, heartbeats | `sim/radar_node.py` |
+| Radar coverage | 120° wedge per node at **300 m deployment range**, tooltip notes the demo module's few-metre range; wedge turns amber (camera waking) / red (recording) | Map |
+| Live radar returns | Moving blip + trail from each radar reading | Map |
+| Radar scope | Fan display, range / speed / closing-receding, range-over-time trace | Alert panel |
+| Camera wake | `STANDBY → WAKING → REC` on the node, health table and camera tile | Map, health table, alert panel |
+| Pipeline | Five steps lit in order, live strip on the map plus per-alert strip | Map overlay, alert panel |
+| Drive a target | Click/drag a person, vehicle, animal or clutter marker; whichever wedge covers it reports it | Demo controls |
+| Fiber DAS | Dashed purple line along the riverbed, "deployment only" | Map |
+| Labels | "SIMULATED INPUTS" in header; "PLACEHOLDER" / "PRERECORDED · LOOP" on video; "SIM" on radar | Everywhere |
+
+---
+
+## 4. Functional requirements
+
+### A. Header
+| ID | Requirement | Status |
+| :--- | :--- | :--- |
+| FR-W1 | Link status reflects the WebSocket (`Online · synced N s ago`, `Connecting…`, `Offline · reconnecting`); reconnect with 2–5 s backoff | ✅ |
+| FR-W2 | IST clock ticking at 1 Hz | ✅ |
+| FR-W3 | Audit trail modal: searchable, newest first, CSV export, Esc to close | ✅ |
+| FR-W4 | Operator badge; operator name recorded on every action | ✅ |
+| FR-W5 | PRD metrics in header: median alert time, false-alarm rate, logged-normal count | ✅ |
+| FR-W6 | Persistent "SIMULATED INPUTS" label | ✅ |
+
+### B. Alert queue and sensor health
+| ID | Requirement | Status |
+| :--- | :--- | :--- |
+| FR-W7 | Queue cards: ID, band + score, target, node + camera, age, ETA, status | ✅ |
+| FR-W8 | Band filters (All / High / Review / Log) | ✅ |
+| FR-W9 | Selecting a card updates the alert panel and pans the map | ✅ |
+| FR-W10 | Health table: battery, signal, camera state, seconds since last heartbeat, OFFLINE badge | ✅ |
+
+### C. Map and log
+| ID | Requirement | Status |
+| :--- | :--- | :--- |
+| FR-W11 | Map / Satellite switch and `M` / `S` hotkeys | ✅ |
+| FR-W12 | Cursor lat/lon readout | ✅ |
+| FR-W13 | Border line, geofences with hours, BOP ring, fiber line, legend | ✅ |
+| FR-W14 | Radar wedge per node, coloured by camera state; greyed when offline | ✅ |
+| FR-W15 | Live radar blips and trails (fade after ~25 s) | ✅ |
+| FR-W16 | Alert markers by band; selected alert with radar track and heading ray | ✅ |
+| FR-W17 | High-alert banner while any High alert is open; click to select | ✅ |
+| FR-W18 | Live pipeline strip for the latest incident (alerted or logged) | ✅ |
+| FR-W19 | Sensor log, newest first, colour-tagged by source | ✅ |
+
+### D. Alert panel
+| ID | Requirement | Status |
+| :--- | :--- | :--- |
+| FR-W20 | Pipeline strip: radar → camera → YOLO → zone check → outcome, with details | ✅ |
+| FR-W21 | Metadata: target, first seen, heading, node/camera, distance to BOP, QRT ETA | ✅ |
+| FR-W22 | Camera tile plays the alert's prerecorded clip on loop (muted); YOLO boxes overlaid (per-frame if a detections JSON exists) | 🎞 placeholder until clips are added |
+| FR-W23 | Camera modal with the same clip, telemetry overlay | 🎞 |
+| FR-W24 | Radar scope with range, speed, motion, range trace | ✅ |
+| FR-W25 | "Why this score": every factor with its weight; total equals the sum | ✅ |
+| FR-W26 | Sensor confidence line (Radar · Thermal) and zone anomaly score with OUTLIER/NORMAL | ✅ |
+| FR-W27 | Alert time for this alert ("Alert in N s") | ✅ |
+
+### E. Operator decisions
+| ID | Requirement | Status |
+| :--- | :--- | :--- |
+| FR-W28 | Track, Need info, Confirm; Dismiss and Escalate require a note (client and server) | ✅ |
+| FR-W29 | Dismiss lowers the score of similar future events (node, 3-hour band, class) | ✅ |
+| FR-W30 | Sound cue for new High alerts | ✅ |
+| FR-W31 | **Drone only on operator click**; button shows "Drone sent ✓"; disabled for closed alerts | ✅ |
+| FR-W32 | Drone flight animation BOP → alert, then drone feed modal (prerecorded clip or placeholder), labelled simulated | 🎞 |
+
+### F. Demo controls
+| ID | Requirement | Status |
+| :--- | :--- | :--- |
+| FR-W33 | One-click scenarios: Night Intrusion, Market Crossing, Stray Animal, Radar Only, Node Offline; 1x/2x/4x speed | ✅ |
+| FR-W34 | Drive-a-target: type (person / vehicle / animal / clutter), count, time of day (night / day / real clock) | ✅ |
+| FR-W35 | Reset restores the reference state for every connected screen | ✅ |
+
+### Out of scope for the demo
+| Item | Why |
+| :--- | :--- |
+| Phone app / PWA for outpost personnel | 🚫 PRD lists "dashboard and app"; the web dashboard covers the demo. Next candidate after clips. |
+| Live video streaming | 🚫 Decision: prerecorded loops |
+| Real hardware, MQTT | 🚫 No hardware; the ingest endpoint is the hook for later |
+| Commander features (heatmap, timeline, settings, roles, Hindi) | 🚫 Removed from the Oct 11 PRD |
+| Identity / face / nationality inference | 🚫 PRD non-goal, never built |
+
+---
+
+## 5. Model drop-in
+
+Drop files into `app/ml/weights/` and restart; `GET /api/models/status` shows what is live.
+
+| File | Model | Fallback without it |
+| :--- | :--- | :--- |
+| `vision_thermal.pt` | YOLO fine-tuned on HIT-UAV + LLVIP | Scenario detections + demo boxes |
+| `radar_clf.joblib` | Optional radar track classifier | Speed rules (≤ 2.5 m/s walking) |
+| `baseline_iso.joblib` | Isolation Forest on `[hour, expected_activity, count, in_corridor]` | Zone baseline formula |
+
+---
+
+## 6. Build plan
+
+| Step | Work | Status |
+| :--- | :--- | :--- |
+| 1 | Docs aligned with the Oct 11 PRD and decisions | ✅ |
+| 2 | Radar event schema, gated zone-check scoring, pipeline module, metrics endpoint | ✅ |
+| 3 | Radar scenarios, fixed market corridor geometry and node/zone IDs, served media from `/media`, scenario tests | ✅ |
+| 4 | Virtual radar node script, virtual heartbeats + 30 s watchdog | ✅ |
+| 5 | React dashboard (Vite + TS + Leaflet) with radar wedges, scope, camera states, clip placeholder, pipeline strips | ✅ |
+| 6 | Alert-time and false-alarm metrics in header and API | ✅ |
+| 7 | Drive-a-target mode | ✅ |
+| 8 | Record the prerecorded clips (see `data/media/clips/README.md`) | 🔜 team |
+| 9 | Drop in fine-tuned YOLO weights; report mAP@0.5 vs pretrained | 🔜 team |
+| 10 | Rehearse: each scenario 20×, full demo run 3× without a failure | 🔜 |
+| 11 | Optional: phone view for outpost personnel | later |
