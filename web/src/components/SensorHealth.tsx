@@ -4,11 +4,12 @@ import { secondsAgo } from '../lib/format';
 interface Props {
   nodes: Record<string, NodeStatus>;
   serverNow: number;
+  onSelect?: (id: string) => void;
 }
 
 const CAM_LABEL: Record<string, string> = { standby: 'Standby', waking: 'Waking', recording: 'Rec', offline: '—' };
 
-export function SensorHealth({ nodes, serverNow }: Props) {
+export function SensorHealth({ nodes, serverNow, onSelect }: Props) {
   const ids = Object.keys(nodes).sort();
   const online = ids.filter((id) => nodes[id].status !== 'offline').length;
 
@@ -32,7 +33,7 @@ export function SensorHealth({ nodes, serverNow }: Props) {
           {ids.map((id) => {
             const n = nodes[id];
             return (
-              <tr key={id} title={n.name}>
+              <tr key={id} title={n.name} className={onSelect ? 'clickable' : undefined} onClick={() => onSelect?.(id)}>
                 <td>{id}</td>
                 <td style={n.battery < 30 ? { color: 'var(--amber)' } : undefined}>{n.battery}%</td>
                 <td>{n.signal_dbm} dBm</td>

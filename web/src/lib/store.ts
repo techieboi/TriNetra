@@ -1,4 +1,4 @@
-import { useEffect, useReducer, useRef } from 'react';
+import { useCallback, useEffect, useReducer, useRef } from 'react';
 import type {
   Alert, DroneDispatch, IncidentUpdate, LogRow, Metrics, NodeStatus, RadarEvent, Zone,
 } from '../types';
@@ -6,6 +6,14 @@ import { playAlarm } from './audio';
 
 export type Filter = 'all' | 'high' | 'review' | 'log';
 export type LinkState = 'connecting' | 'online' | 'offline';
+export type TimeRange = '1h' | 'today' | 'all';
+
+/** What a map click opened: a small card anchored to the marker. */
+export type Popup = { kind: 'node' | 'alert'; id: string };
+/** The side drawer: full details or one of the lists from the navbar. */
+export type Panel =
+  | { kind: 'node' | 'alert'; id: string }
+  | { kind: 'alerts' | 'sensors' | 'log' | 'briefing' };
 
 export interface RadarBlip extends RadarEvent {
   receivedAt: number;
@@ -19,6 +27,11 @@ export interface State {
   metrics: Metrics | null;
   selectedId: string | null;
   filter: Filter;
+  timeRange: TimeRange;
+  popup: Popup | null;
+  panel: Panel | null;
+  /** Newest alert to arrive over the socket, so the ticker can flash it once. */
+  freshAlert: { id: string; at: number } | null;
   link: LinkState;
   lastSync: number;
   serverOffset: number; // server clock minus browser clock, seconds
@@ -29,7 +42,7 @@ export interface State {
 
 const initial: State = {
   zone: null, nodes: {}, alerts: [], logs: [], metrics: null, selectedId: null, filter: 'all',
-  link: 'connecting', lastSync: 0, serverOffset: 0, blips: [], latestIncident: null, drone: null,
+  timeRange: 'today', popup: null, panel: null, freshAlert: null, link: 'connecting', lastSync: 0, serverOffset: 0, blips: [], latestIncident: null, drone: null,
 };
 
 type Msg = { type: string; [k: string]: any };
@@ -38,6 +51,10 @@ type Action =
   | { type: 'link'; link: LinkState }
   | { type: 'select'; id: string }
   | { type: 'filter'; filter: Filter }
+  | { type: 'timeRange'; range: TimeRange }
+  | { type: 'openPopup'; popup: Popup }
+  | { type: 'openPanel'; panel: Panel }
+  | { type: 'close'; what: 'popup' | 'panel' }
   | { type: 'droneDone' }
   | { type: 'pruneBlips' };
 
@@ -57,6 +74,25 @@ function reducer(state: State, action: Action): State {
       return { ...state, selectedId: action.id };
     case 'filter':
       return { ...state, filter: action.filter };
+    case 'timeRange':
+      return { ...state, timeRange: action.range };
+    case 'openPopup':
+      return {
+        ...state,
+        popup: action.popup,
+        selectedId: action.popup.kind === 'alert' ? action.popup.id : state.selectedId,
+      };
+    case 'openPanel': {
+      const p = action.panel;
+      return {
+        ...state,
+        panel: p,
+        popup: null,
+        selectedId: p.kind === 'alert' ? p.id : state.selectedId,
+      };
+    }
+    case 'close':
+      return action.what === 'popup' ? { ...state, popup: null } : { ...state, panel: null };
     case 'droneDone':
       return { ...state, drone: null };
     case 'pruneBlips': {
@@ -74,21 +110,26 @@ function applyMessage(state: State, msg: Msg): State {
   switch (msg.type) {
     case 'init': {
       const alerts = [...(msg.alerts as Alert[])].sort(byNewest);
-      const keep = alerts.some((a) => a.alert_id === state.selectedId);
+      const known = (id?: string) => alerts.some((a) => a.alert_id === id);
+      const keepPanel = state.panel?.kind !== 'alert' || known(state.panel.id);
+      const keepPopup = state.popup?.kind !== 'alert' || known(state.popup.id);
       return {
         ...synced,
         zone: msg.zone, nodes: msg.nodes, alerts, logs: msg.sensor_logs, metrics: msg.metrics,
         serverOffset: msg.server_time - Date.now() / 1000,
-        selectedId: keep ? state.selectedId : alerts[0]?.alert_id ?? null,
+        selectedId: known(state.selectedId ?? undefined) ? state.selectedId : null,
+        panel: keepPanel ? state.panel : null,
+        popup: keepPopup ? state.popup : null,
         blips: [], latestIncident: null, drone: null,
       };
     }
     case 'alert': {
       const alert = msg.data as Alert;
+      // A new alert never opens anything by itself: it lands in the ticker and pulses on the map.
       return {
         ...synced,
         alerts: upsert(state.alerts, alert),
-        selectedId: msg.is_new ? alert.alert_id : state.selectedId ?? alert.alert_id,
+        freshAlert: msg.is_new ? { id: alert.alert_id, at: Date.now() } : state.freshAlert,
       };
     }
     case 'alert_action':
@@ -114,6 +155,8 @@ function applyMessage(state: State, msg: Msg): State {
 export function useLiveState() {
   const [state, dispatch] = useReducer(reducer, initial);
   const retry = useRef(0);
+  const socket = useRef<WebSocket | null>(null);
+  const immediate = useRef(false);
 
   useEffect(() => {
     let ws: WebSocket | null = null;
@@ -124,6 +167,7 @@ export function useLiveState() {
       dispatch({ type: 'link', link: 'connecting' });
       const proto = location.protocol === 'https:' ? 'wss:' : 'ws:';
       ws = new WebSocket(`${proto}//${location.host}/ws`);
+      socket.current = ws;
       ws.onopen = () => {
         retry.current = 0;
         dispatch({ type: 'link', link: 'online' });
@@ -136,7 +180,8 @@ export function useLiveState() {
       ws.onclose = () => {
         if (closed) return;
         dispatch({ type: 'link', link: 'offline' });
-        const delay = Math.min(5000, 2000 * 1.5 ** retry.current++);
+        const delay = immediate.current ? 0 : Math.min(5000, 2000 * 1.5 ** retry.current++);
+        immediate.current = false;
         timer = window.setTimeout(connect, delay);
       };
     };
@@ -151,7 +196,14 @@ export function useLiveState() {
     };
   }, []);
 
-  return [state, dispatch] as const;
+  /** Drop the socket and reconnect straight away; the server answers with a fresh `init`. */
+  const resync = useCallback(() => {
+    retry.current = 0;
+    immediate.current = true;
+    socket.current?.close();
+  }, []);
+
+  return [state, dispatch, resync] as const;
 }
 
 export type Dispatch = ReturnType<typeof useLiveState>[1];

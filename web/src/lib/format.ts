@@ -52,3 +52,22 @@ export function motionClass(speeds: number[]): 'static' | 'walking' | 'vehicle' 
 }
 
 export const isActive = (status: string) => status === 'open' || status === 'tracked' || status === 'escalated';
+
+const IST_DAY = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' });
+
+/** Whether an ISO timestamp falls in the navbar's time range (last hour, today in IST, or anything). */
+export function inRange(iso: string, range: '1h' | 'today' | 'all', now: number = Date.now()): boolean {
+  if (range === 'all') return true;
+  const t = Date.parse(iso);
+  if (Number.isNaN(t)) return true;
+  if (range === '1h') return now - t <= 3_600_000;
+  return IST_DAY.format(t) === IST_DAY.format(now);
+}
+
+/** "3 persons", "1 vehicle", "Unconfirmed target". The backend sends classes like "Person ×3". */
+export function targetLabel(cls: string | null, count: number): string {
+  if (!cls) return 'Unconfirmed target';
+  const n = Math.max(1, count);
+  const noun = cls.split(' ')[0].toLowerCase();
+  return n === 1 ? `1 ${noun}` : `${n} ${noun === 'person' ? 'persons' : `${noun}s`}`;
+}

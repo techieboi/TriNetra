@@ -37,11 +37,7 @@
 .cam-state-chip.offline { color: #64748b; border-color: rgba(100, 116, 139, 0.4); }
 
 /* ---------- map ---------- */
-#c2-leaflet-map.drive-mode { cursor: crosshair; }
 
-.node-circle-outer.warning { border-color: var(--amber); background: rgba(245, 158, 11, 0.35); box-shadow: 0 0 10px rgba(245, 158, 11, 0.6); }
-.node-circle-outer.cam-waking { outline: 2px solid rgba(245, 158, 11, 0.8); outline-offset: 2px; }
-.node-circle-outer.cam-recording { outline: 2px solid rgba(239, 68, 68, 0.9); outline-offset: 2px; animation: rec-blink 1s infinite; }
 @keyframes rec-blink { 50% { outline-color: rgba(239, 68, 68, 0.2); } }
 
 .bop-marker {
@@ -58,11 +54,6 @@
   font-weight: 800;
   color: #fff;
 }
-
-.threat-pulse-ring.review { border-color: rgba(245, 158, 11, 0.8); }
-.threat-center-dot.review { background: #f59e0b; box-shadow: 0 0 10px #f59e0b; }
-.threat-pulse-ring.log { border-color: rgba(148, 163, 184, 0.7); }
-.threat-center-dot.log { background: #94a3b8; box-shadow: none; }
 
 .radar-blip {
   width: 14px;
@@ -110,11 +101,6 @@
   max-width: 80%;
   text-align: center;
 }
-
-.legend-box { border-style: dashed; }
-.legend-radar { background: rgba(56, 189, 248, 0.15); border: 1px solid #38bdf8 !important; border-style: solid !important; }
-.legend-line { width: 14px; height: 0; display: inline-block; }
-.legend-das { border-top: 3px dotted #a78bfa; }
 
 .live-pipeline {
   position: absolute;
@@ -234,6 +220,22 @@
 }
 
 /* ---------- radar panel ---------- */
+.waveform-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  font-weight: 700;
+  color: #38bdf8;
+  letter-spacing: 0.5px;
+}
+.waveform-freq-tag {
+  color: #4ade80;
+  background: rgba(34, 197, 94, 0.1);
+  padding: 1px 4px;
+  border-radius: 2px;
+}
 .radar-box {
   background: #030712;
   border: 1px solid rgba(56, 189, 248, 0.2);
@@ -268,9 +270,6 @@
 .panel-threat-c2.empty { justify-content: center; }
 
 /* ---------- footer ---------- */
-.demo-divider { width: 1px; height: 16px; background: var(--border-card); margin: 0 4px; }
-.demo-btn-active { background: rgba(253, 224, 71, 0.15) !important; border-color: rgba(253, 224, 71, 0.5) !important; color: #fef08a !important; }
-.demo-controls-bar { flex-wrap: nowrap; overflow-x: auto; scrollbar-width: none; }
 
 /* ---------- modals ---------- */
 .c2-modal-card { max-height: 90vh; display: flex; flex-direction: column; }

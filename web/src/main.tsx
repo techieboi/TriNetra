@@ -3,6 +3,7 @@ import { createRoot } from 'react-dom/client';
 import 'leaflet/dist/leaflet.css';
 import './styles/base.css';
 import './styles/app.css';
+import './styles/shell.css';
 import App from './App';
 
 createRoot(document.getElementById('root')!).render(

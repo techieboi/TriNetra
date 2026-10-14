@@ -1,9 +1,10 @@
-import type { Alert } from '../types';
+import type { Alert, Metrics } from '../types';
 import type { Filter } from '../lib/store';
 import { isActive, relativeTime } from '../lib/format';
 
 interface Props {
   alerts: Alert[];
+  metrics: Metrics | null;
   filter: Filter;
   selectedId: string | null;
   now: number;
@@ -13,24 +14,39 @@ interface Props {
 
 const FILTERS: { key: Filter; label: string }[] = [
   { key: 'all', label: 'All' },
-  { key: 'high', label: 'High (70+)' },
-  { key: 'review', label: 'Review (40–69)' },
-  { key: 'log', label: 'Log (<40)' },
+  { key: 'high', label: 'High 70+' },
+  { key: 'review', label: 'Review 40–69' },
+  { key: 'log', label: 'Log <40' },
 ];
 
 const STATUS_COLOR: Record<string, string> = {
   open: '#fbbf24', tracked: '#38bdf8', escalated: '#f87171', confirmed: '#4ade80', dismissed: '#94a3b8',
 };
 
-export function AlertQueue({ alerts, filter, selectedId, now, onFilter, onSelect }: Props) {
+export function AlertQueue({ alerts, metrics, filter, selectedId, now, onFilter, onSelect }: Props) {
   const shown = alerts.filter((a) => filter === 'all' || a.band === filter);
   const active = alerts.filter((a) => isActive(a.status)).length;
+  const fa = metrics?.false_alarm_rate;
 
   return (
     <div className="c2-panel panel-alert-queue">
-      <div className="panel-header">
-        <span className="panel-title">Alert queue</span>
-        <span className="panel-subtitle">{active} active</span>
+      <div className="queue-metrics">
+        <div title="Alerts still waiting on an operator decision">
+          <span className="meta-label">Active</span>
+          <span className="meta-val">{active}</span>
+        </div>
+        <div title="Seconds from radar trigger to alert on this dashboard (median of live alerts)">
+          <span className="meta-label">Alert time</span>
+          <span className="meta-val">{metrics?.alert_time_s_median != null ? `${metrics.alert_time_s_median.toFixed(1)} s` : '—'}</span>
+        </div>
+        <div title="Share of decided alerts the operator dismissed as normal activity">
+          <span className="meta-label">False alarms</span>
+          <span className="meta-val">{fa != null && metrics ? `${Math.round(fa * 100)}% (${metrics.dismissed}/${metrics.decided})` : '—'}</span>
+        </div>
+        <div title="Activity the zone check logged as normal, without alerting">
+          <span className="meta-label">Logged normal</span>
+          <span className="meta-val">{metrics?.incidents_logged_normal ?? 0}</span>
+        </div>
       </div>
       <div className="queue-filters">
         {FILTERS.map((f) => (

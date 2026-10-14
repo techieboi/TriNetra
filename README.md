@@ -63,7 +63,14 @@ The same `Dockerfile` works on Railway or Fly.io.
 
 ## Demo walkthrough
 
-Open **Demo controls** at the bottom.
+The dashboard opens on just the map of zone G2, a slim navbar and a **LIVE** headline ticker. Nothing else shows until you ask for it:
+
+- **Click a node or alert dot** on the map for a small card; **Details →** opens the full side panel.
+- **Click a headline** in the ticker to jump to that alert or node.
+- Navbar: **Layers** (overlays, dark/satellite), **time range**, **re-centre**, **🔔 alert queue**, **Demo**, **resync**, and **☰** for shift briefing, sensor health, activity log and audit trail.
+- The pill at the bottom left (link · nodes online · open alerts) opens the matching list.
+
+Open **Demo ▾** in the navbar.
 
 | Button | What happens | Expected |
 | :--- | :--- | :--- |
@@ -74,14 +81,14 @@ Open **Demo controls** at the bottom.
 | 📡 Node Offline | N4 heartbeat lost | N4 and its wedge go grey, blind-spot warning |
 | 🎯 Drive a target | Click the map to drop a person / vehicle / animal / clutter target; drag to move it | Whichever radar wedge covers it reports it and the full flow runs live |
 
-Then on an alert:
-1. Read the **pipeline strip** (which step decided what) and **Why this score** (every factor and weight).
-2. Watch the **camera tile** (looping prerecorded clip, or a placeholder until clips are added) and the **radar scope**.
+Then click the alert (on the map or in the ticker) and open **Details →**:
+1. **Summary** has the **pipeline strip** (which step decided what) and the decision buttons; **Why this score** lists every factor and weight.
+2. **Camera & radar** has the **camera tile** (looping prerecorded clip, or a placeholder until clips are added) and the **radar scope**.
 3. **Send drone for visual check**: operator click only; the drone flies from BOP-1 and the drone feed opens.
 4. **Confirm**, **Track**, **Need info**, or **Dismiss / Escalate** (note required). A dismissal lowers the score of similar future events.
-5. The header tracks **alert time** (radar trigger to dashboard) and the **false-alarm rate** (dismissed / decided). **Audit trail** shows every step.
+5. The alert queue and **Shift briefing** track **alert time** (radar trigger to dashboard) and the **false-alarm rate** (dismissed / decided). **Audit trail** (☰ menu) shows every step.
 
-Hotkeys: `M` map, `S` satellite, `Esc` closes dialogs.
+Hotkeys: `M` dark map, `S` satellite, `Esc` closes the card, then the panel.
 
 ### Virtual radar node (stands in for the hardware)
 

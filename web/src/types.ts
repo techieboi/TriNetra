@@ -44,6 +44,7 @@ export interface Zone {
   zone_id: string;
   name: string;
   description: string;
+  bounds?: { min_lat: number; max_lat: number; min_lon: number; max_lon: number };
   center: { lat: number; lon: number; zoom: number };
   international_border: LatLon[];
   nodes: ZoneNode[];

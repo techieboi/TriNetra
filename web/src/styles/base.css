@@ -1,20 +1,26 @@
-/* TRINETRA C2 SENTINEL - EXACT REFERENCE TACTICAL THEME */
+/* TRINETRA base theme: near-black, low-chrome surfaces (shell layout lives in shell.css) */
 :root {
-  --bg-app: #080c14;
-  --bg-header: #0c111a;
-  --bg-panel: #0f1522;
-  --bg-panel-inner: #0b1019;
-  --bg-card: #131b28;
-  --bg-card-hover: #182333;
-  --bg-card-selected: #162438;
+  --bg-app: #0b0b0f;
+  --bg-header: #050507;
+  --bg-panel: #111116;
+  --bg-panel-inner: #0d0d12;
+  --bg-card: #18181f;
+  --bg-card-hover: #1f1f28;
+  --bg-card-selected: #1a2233;
+  --bg-glass: rgba(14, 14, 19, 0.88);
 
-  --border-subtle: rgba(255, 255, 255, 0.08);
-  --border-card: rgba(255, 255, 255, 0.1);
+  --border-subtle: rgba(255, 255, 255, 0.06);
+  --border-card: rgba(255, 255, 255, 0.09);
   --border-focus: #3b82f6;
 
-  --text-main: #f1f5f9;
-  --text-muted: #94a3b8;
-  --text-dim: #64748b;
+  --text-main: #ececf1;
+  --text-muted: #a1a1ad;
+  --text-dim: #6b6b78;
+
+  --radius: 10px;
+  --radius-sm: 6px;
+  --shadow: 0 12px 40px rgba(0, 0, 0, 0.55);
+  --ease: cubic-bezier(0.2, 0.8, 0.2, 1);
 
   --crimson: #ef4444;
   --crimson-bg: rgba(239, 68, 68, 0.16);
@@ -28,8 +34,8 @@
   --green-bg: rgba(34, 197, 94, 0.16);
   --green-border: rgba(34, 197, 94, 0.35);
 
-  --blue: #2563eb;
-  --blue-hover: #1d4ed8;
+  --blue: #3b82f6;
+  --blue-hover: #2563eb;
   --blue-glow: rgba(37, 99, 235, 0.35);
 
   --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
@@ -51,8 +57,8 @@ html, body {
   background-color: var(--bg-app);
   color: var(--text-main);
   font-family: var(--font-sans);
-  font-size: 12px;
-  line-height: 1.4;
+  font-size: 13px;
+  line-height: 1.45;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -62,48 +68,6 @@ html, body {
   flex-direction: column;
   width: 100vw;
   height: 100vh;
-}
-
-/* TOP HEADER */
-.c2-header {
-  height: 48px;
-  background-color: var(--bg-header);
-  border-bottom: 1px solid var(--border-subtle);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 16px;
-  flex-shrink: 0;
-  z-index: 50;
-}
-
-.header-left {
-  display: flex;
-  align-items: center;
-  gap: 24px;
-}
-
-.logo-group {
-  display: flex;
-  align-items: baseline;
-  gap: 8px;
-}
-
-.logo-title {
-  font-size: 14.5px;
-  font-weight: 800;
-  letter-spacing: 1.2px;
-  color: #fff;
-}
-
-.logo-subtitle {
-  font-size: 11px;
-  color: var(--text-dim);
-}
-
-.meta-item {
-  display: flex;
-  flex-direction: column;
 }
 
 .meta-label {
@@ -120,32 +84,9 @@ html, body {
   font-family: var(--font-mono);
 }
 
-.link-status {
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  color: var(--text-muted);
-}
-
-.link-dot {
-  width: 6px;
-  height: 6px;
-  border-radius: 50%;
-  background-color: var(--green);
-  box-shadow: 0 0 6px var(--green);
-  display: inline-block;
-  animation: pulse-green 2s infinite ease-in-out;
-}
-
 @keyframes pulse-green {
   0%, 100% { opacity: 1; transform: scale(1); }
   50% { opacity: 0.4; transform: scale(0.85); }
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
-  gap: 12px;
 }
 
 .c2-btn-ghost {
@@ -162,42 +103,6 @@ html, body {
 .c2-btn-ghost:hover {
   background: rgba(255, 255, 255, 0.09);
   border-color: rgba(255, 255, 255, 0.2);
-}
-
-.operator-badge {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid var(--border-subtle);
-  padding: 3px 8px;
-  border-radius: 4px;
-}
-
-.op-avatar {
-  background: #0f766e;
-  color: #fff;
-  font-size: 9.5px;
-  font-weight: 700;
-  padding: 1px 5px;
-  border-radius: 3px;
-}
-
-.op-name {
-  font-size: 11px;
-  color: var(--text-muted);
-}
-
-/* THREE-COLUMN WORKSPACE */
-.c2-workspace {
-  flex: 1;
-  display: grid;
-  grid-template-columns: 285px 1fr 425px;
-  gap: 10px;
-  padding: 10px;
-  overflow: hidden;
-  background-color: var(--bg-app);
-  min-height: 0;
 }
 
 /* PANELS GENERIC */
@@ -229,15 +134,7 @@ html, body {
   color: var(--text-dim);
 }
 
-/* ========================================================
-   LEFT COLUMN: ALERT QUEUE & SENSOR HEALTH
-   ======================================================== */
-.col-left {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  overflow: hidden;
-}
+/* ALERT QUEUE & SENSOR HEALTH (drawer lists) */
 
 .panel-alert-queue {
   flex: 1;
@@ -410,209 +307,12 @@ html, body {
   font-weight: 700;
 }
 
-/* ========================================================
-   CENTER COLUMN: MAP & SENSOR LOG
-   ======================================================== */
-.col-center {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  overflow: hidden;
-}
-
-.panel-map {
-  flex: 65;
-  position: relative;
-  overflow: hidden;
-}
+/* MAP & ACTIVITY LOG */
 
 #c2-leaflet-map {
   width: 100%;
   height: 100%;
   background: #080d14;
-}
-
-/* MAP HUD BAR */
-.map-hud-bar {
-  position: absolute;
-  top: 10px;
-  left: 10px;
-  right: 10px;
-  z-index: 500;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  pointer-events: none;
-}
-
-.map-hud-bar > * {
-  pointer-events: auto;
-}
-
-.map-hud-left {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.map-switcher-pills {
-  background: rgba(13, 18, 28, 0.88);
-  border: 1px solid var(--border-subtle);
-  border-radius: 4px;
-  padding: 2px;
-  display: flex;
-  backdrop-filter: blur(8px);
-}
-
-.map-pill {
-  background: transparent;
-  border: none;
-  color: var(--text-dim);
-  font-size: 11px;
-  padding: 3px 9px;
-  border-radius: 3px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.map-pill:hover {
-  color: var(--text-main);
-}
-
-.map-pill.active {
-  background: rgba(255, 255, 255, 0.15);
-  color: #fff;
-  font-weight: 600;
-}
-
-.cursor-coords-tag {
-  background: rgba(13, 18, 28, 0.88);
-  border: 1px solid var(--border-subtle);
-  padding: 4px 8px;
-  border-radius: 4px;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  color: var(--text-muted);
-  backdrop-filter: blur(8px);
-}
-
-.cursor-coords-tag span {
-  color: #fff;
-}
-
-/* HIGH ALERT BANNER IN MAP */
-.map-high-alert-banner {
-  background: rgba(220, 38, 38, 0.92);
-  border: 1px solid rgba(248, 113, 113, 0.5);
-  color: #fff;
-  padding: 4px 10px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-family: var(--font-mono);
-  font-size: 11px;
-  font-weight: 700;
-  box-shadow: 0 0 12px rgba(220, 38, 38, 0.5);
-  backdrop-filter: blur(8px);
-}
-
-.alert-banner-icon {
-  font-size: 12px;
-}
-
-.alert-banner-text {
-  letter-spacing: 0.5px;
-}
-
-.alert-banner-tag {
-  background: rgba(0, 0, 0, 0.25);
-  padding: 1px 5px;
-  border-radius: 2px;
-}
-
-/* TACTICAL COMPASS */
-.map-compass-badge {
-  position: absolute;
-  top: 48px;
-  right: 14px;
-  z-index: 500;
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  background: rgba(13, 18, 28, 0.88);
-  border: 1px solid var(--border-subtle);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 800;
-  color: #fff;
-  pointer-events: none;
-  box-shadow: 0 0 8px rgba(0, 0, 0, 0.6);
-}
-
-/* TACTICAL LEGEND OVERLAY */
-.map-tactical-legend {
-  position: absolute;
-  bottom: 12px;
-  left: 12px;
-  z-index: 500;
-  background: rgba(13, 18, 28, 0.88);
-  border: 1px solid var(--border-subtle);
-  padding: 6px 10px;
-  border-radius: 4px;
-  font-size: 10.5px;
-  color: var(--text-muted);
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  backdrop-filter: blur(8px);
-}
-
-.legend-row {
-  display: flex;
-  align-items: center;
-  gap: 7px;
-}
-
-.legend-box {
-  width: 12px;
-  height: 8px;
-  border: 1.5px dashed;
-  border-radius: 1px;
-  display: inline-block;
-}
-
-.legend-box.zone-a {
-  border-color: #f59e0b;
-  background: rgba(245, 158, 11, 0.18);
-}
-
-.legend-box.zone-b {
-  border-color: #ef4444;
-  background: rgba(239, 68, 68, 0.18);
-}
-
-.legend-box.zone-c {
-  border-color: #10b981;
-  background: rgba(16, 185, 129, 0.18);
-}
-
-.map-scale-badge {
-  position: absolute;
-  bottom: 12px;
-  left: 140px;
-  z-index: 500;
-  background: rgba(13, 18, 28, 0.88);
-  border: 1px solid var(--border-subtle);
-  border-bottom: 2px solid #fff;
-  padding: 2px 7px;
-  font-family: var(--font-mono);
-  font-size: 9.5px;
-  color: var(--text-muted);
-  pointer-events: none;
 }
 
 /* SENSOR LOG PANEL (BOTTOM CENTER) */
@@ -709,16 +409,7 @@ html, body {
   color: #cbd5e1;
 }
 
-/* ========================================================
-   RIGHT COLUMN: THREAT DETAIL, EMBEDDED CAM & DECISIONS
-   ======================================================== */
-.col-right {
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-  min-height: 0;
-  height: 100%;
-}
+/* ALERT DETAIL, EMBEDDED CAM & DECISIONS (drawer) */
 
 .panel-threat-c2 {
   flex: 1;
@@ -1124,113 +815,10 @@ html, body {
   color: rgba(255, 255, 255, 0.85);
 }
 
-/* ========================================================
-   FOOTER: DEMO CONTROLS
-   ======================================================== */
-.c2-footer {
-  height: 32px;
-  background-color: var(--bg-header);
-  border-top: 1px solid var(--border-subtle);
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 0 12px;
-  flex-shrink: 0;
-}
-
-.demo-controls-toggle {
-  background: transparent;
-  border: none;
-  color: var(--text-dim);
-  font-size: 10.5px;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  gap: 5px;
-  transition: color 0.15s ease;
-}
-
-.demo-controls-toggle:hover {
-  color: #fff;
-}
-
-.demo-controls-bar {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-
-.demo-label {
-  font-size: 9.5px;
-  color: var(--text-dim);
-  font-family: var(--font-mono);
-}
-
-.demo-btn {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-main);
-  padding: 3px 8px;
-  border-radius: 3px;
-  font-size: 10.5px;
-  cursor: pointer;
-  transition: all 0.15s ease;
-}
-
-.demo-btn:hover {
-  background: rgba(255, 255, 255, 0.12);
-  color: #fff;
-}
-
-.speed-select-wrap {
-  position: relative;
-}
-
-.demo-speed-sel {
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid var(--border-subtle);
-  color: var(--text-muted);
-  font-size: 10.5px;
-  padding: 2px 6px;
-  border-radius: 3px;
-  cursor: pointer;
-  outline: none;
-}
 
 /* ========================================================
    LEAFLET CUSTOM MARKERS & OVERLAYS
    ======================================================== */
-.node-circle-marker {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-mono);
-  font-size: 10px;
-  font-weight: 700;
-  color: #fff;
-  cursor: pointer;
-}
-
-.node-circle-outer {
-  width: 24px;
-  height: 24px;
-  border-radius: 50%;
-  border: 2px solid #06b6d4;
-  background: rgba(6, 182, 212, 0.4);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  box-shadow: 0 0 10px rgba(6, 182, 212, 0.6);
-  color: #fff;
-  font-weight: 800;
-}
-
-.node-circle-outer.offline {
-  border-color: #64748b;
-  background: rgba(100, 116, 139, 0.4);
-  box-shadow: none;
-  color: #94a3b8;
-}
 
 .border-line-label {
   font-family: var(--font-mono);
@@ -1242,50 +830,9 @@ html, body {
   white-space: nowrap;
 }
 
-/* THREAT PULSING MARKER & LABEL ON MAP */
-.threat-marker-wrap {
-  position: relative;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.threat-pulse-ring {
-  position: absolute;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  border: 1.5px solid rgba(239, 68, 68, 0.8);
-  animation: radar-expand 1.8s infinite ease-out;
-}
-
 @keyframes radar-expand {
   0% { transform: scale(0.5); opacity: 1; }
   100% { transform: scale(1.6); opacity: 0; }
-}
-
-.threat-center-dot {
-  width: 14px;
-  height: 14px;
-  border-radius: 50%;
-  background: #ef4444;
-  border: 2px solid #fff;
-  box-shadow: 0 0 10px #ef4444;
-}
-
-.threat-tag-label {
-  position: absolute;
-  left: 20px;
-  background: rgba(13, 18, 28, 0.9);
-  border: 1px solid rgba(239, 68, 68, 0.6);
-  color: #fca5a5;
-  font-family: var(--font-mono);
-  font-size: 9.5px;
-  font-weight: 700;
-  padding: 1px 5px;
-  border-radius: 3px;
-  white-space: nowrap;
-  pointer-events: none;
 }
 
 /* MODALS */
@@ -1480,36 +1027,6 @@ html, body {
   font-weight: 700;
 }
 
-/* SEISMIC HARMONIC WAVEFORM CANVAS */
-.seismic-waveform-box {
-  background: #030712;
-  border: 1px solid rgba(56, 189, 248, 0.2);
-  border-radius: 4px;
-  padding: 6px 8px;
-  margin-top: 5px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.waveform-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  font-family: var(--font-mono);
-  font-size: 9px;
-  font-weight: 700;
-  color: #38bdf8;
-  letter-spacing: 0.5px;
-}
-
-.waveform-freq-tag {
-  color: #4ade80;
-  background: rgba(34, 197, 94, 0.1);
-  padding: 1px 4px;
-  border-radius: 2px;
-}
-
 #seismic-waveform-canvas {
   width: 100%;
   height: 42px;
@@ -1568,15 +1085,5 @@ html, body {
 @keyframes drone-pulse {
   0% { transform: scale(0.9); box-shadow: 0 0 8px #ef4444; }
   100% { transform: scale(1.15); box-shadow: 0 0 20px #ef4444; }
-}
-
-/* LINK RECONNECTING / OFFLINE STYLES */
-.link-status.offline .link-dot {
-  background-color: #ef4444;
-  box-shadow: 0 0 6px #ef4444;
-}
-.link-status.reconnecting .link-dot {
-  background-color: #f59e0b;
-  box-shadow: 0 0 6px #f59e0b;
 }
 
