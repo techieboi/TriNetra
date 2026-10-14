@@ -19,7 +19,9 @@ export function Popover({ trigger, children, align = 'right', className = '' }: 
       if (!root.current?.contains(e.target as Node)) setOpen(false);
     };
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
+      if (e.key !== 'Escape') return;
+      e.stopPropagation(); // Esc closes just this menu, not the card or drawer behind it
+      setOpen(false);
     };
     document.addEventListener('mousedown', onDown);
     document.addEventListener('keydown', onKey);

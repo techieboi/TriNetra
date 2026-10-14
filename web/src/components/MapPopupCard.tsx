@@ -73,7 +73,7 @@ export function MapPopupCard(p: Props) {
 
   const a = p.alerts.find((x) => x.alert_id === p.popup.id);
   if (!a) return null;
-  const closed = !isActive(a.status);
+  const decided = a.status === 'confirmed' || a.status === 'dismissed' || a.status === 'escalated';
   const reasons = [...a.reasons].sort((x, y) => y.weight - x.weight).slice(0, 2);
   return (
     <div className={`map-card band-${a.band}`}>
@@ -96,8 +96,8 @@ export function MapPopupCard(p: Props) {
       <div className="card-meta">{relativeTime(a.created_at, p.now)}{a.camera ? ` · ${a.camera}` : ''}</div>
       <div className="card-btns">
         <button className="btn btn-primary" onClick={p.onDetails}>Details <Icon name="right" size={13} /></button>
-        <button className="btn btn-ok" disabled={closed} onClick={() => p.onAction(a.alert_id, 'confirm')}>Confirm</button>
-        <button className="btn" disabled={closed} onClick={() => p.onDismiss(a.alert_id)}>Dismiss</button>
+        {!decided && <button className="btn btn-ok" onClick={() => p.onAction(a.alert_id, 'confirm')}>Confirm</button>}
+        {!decided && <button className="btn" onClick={() => p.onDismiss(a.alert_id)}>Dismiss</button>}
       </div>
       <div className="card-coords">{a.lat.toFixed(4)}°, {a.lon.toFixed(4)}°</div>
     </div>

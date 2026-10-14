@@ -85,7 +85,7 @@ Then click the alert (on the map or in the ticker) and open **Details →**:
 1. **Summary** has the **pipeline strip** (which step decided what) and the decision buttons; **Why this score** lists every factor and weight.
 2. **Camera & radar** has the **camera tile** (looping prerecorded clip, or a placeholder until clips are added) and the **radar scope**.
 3. **Send drone for visual check**: operator click only; the drone flies from BOP-1 and the drone feed opens.
-4. **Confirm**, **Track**, **Need info**, or **Dismiss / Escalate** (note required). A dismissal lowers the score of similar future events.
+4. **Confirm threat** or **Dismiss** (note required); **⋯** holds **Escalate** (note required) and **Keep tracking**. Once decided, the buttons give way to one line saying who decided what. A dismissal lowers the score of similar future events.
 5. The alert queue and **Shift briefing** track **alert time** (radar trigger to dashboard) and the **false-alarm rate** (dismissed / decided). **Audit trail** (☰ menu) shows every step.
 
 Hotkeys: `S` satellite (default), `M` dark map, `Esc` closes the card, then the panel.
