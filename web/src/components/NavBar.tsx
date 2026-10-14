@@ -28,7 +28,7 @@ interface Props {
 
 const RANGES: { key: TimeRange; label: string }[] = [
   { key: '1h', label: 'Last hour' },
-  { key: 'today', label: 'Today' },
+  { key: '24h', label: 'Last 24 h' },
   { key: 'all', label: 'All time' },
 ];
 

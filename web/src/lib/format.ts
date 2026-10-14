@@ -53,15 +53,12 @@ export function motionClass(speeds: number[]): 'static' | 'walking' | 'vehicle' 
 
 export const isActive = (status: string) => status === 'open' || status === 'tracked' || status === 'escalated';
 
-const IST_DAY = new Intl.DateTimeFormat('en-CA', { timeZone: 'Asia/Kolkata', year: 'numeric', month: '2-digit', day: '2-digit' });
-
-/** Whether an ISO timestamp falls in the navbar's time range (last hour, today in IST, or anything). */
-export function inRange(iso: string, range: '1h' | 'today' | 'all', now: number = Date.now()): boolean {
+/** Whether an ISO timestamp falls in the navbar's time range. A rolling window, so night shifts don't lose alerts at midnight. */
+export function inRange(iso: string, range: '1h' | '24h' | 'all', now: number = Date.now()): boolean {
   if (range === 'all') return true;
   const t = Date.parse(iso);
   if (Number.isNaN(t)) return true;
-  if (range === '1h') return now - t <= 3_600_000;
-  return IST_DAY.format(t) === IST_DAY.format(now);
+  return now - t <= (range === '1h' ? 3_600_000 : 86_400_000);
 }
 
 /** "3 persons", "1 vehicle", "Unconfirmed target". The backend sends classes like "Person ×3". */

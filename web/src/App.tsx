@@ -297,7 +297,13 @@ export default function App() {
           onPanel={openPanel}
         />
 
-        <Drawer open={!!panel} title={title} subtitle={subtitle} onClose={() => dispatch({ type: 'close', what: 'panel' })}>
+        <Drawer
+          open={!!panel}
+          title={title}
+          subtitle={subtitle}
+          onClose={() => dispatch({ type: 'close', what: 'panel' })}
+          back={shownPanel?.kind === 'alert' ? { label: `All alerts (${active.length})`, onClick: () => openPanel({ kind: 'alerts' }) } : undefined}
+        >
           {body}
         </Drawer>
       </main>

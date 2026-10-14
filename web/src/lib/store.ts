@@ -6,7 +6,7 @@ import { playAlarm } from './audio';
 
 export type Filter = 'all' | 'high' | 'review' | 'log';
 export type LinkState = 'connecting' | 'online' | 'offline';
-export type TimeRange = '1h' | 'today' | 'all';
+export type TimeRange = '1h' | '24h' | 'all';
 
 /** What a map click opened: a small card anchored to the marker. */
 export type Popup = { kind: 'node' | 'alert'; id: string };
@@ -42,7 +42,7 @@ export interface State {
 
 const initial: State = {
   zone: null, nodes: {}, alerts: [], logs: [], metrics: null, selectedId: null, filter: 'all',
-  timeRange: 'today', popup: null, panel: null, freshAlert: null, link: 'connecting', lastSync: 0, serverOffset: 0, blips: [], latestIncident: null, drone: null,
+  timeRange: '24h', popup: null, panel: null, freshAlert: null, link: 'connecting', lastSync: 0, serverOffset: 0, blips: [], latestIncident: null, drone: null,
 };
 
 type Msg = { type: string; [k: string]: any };
