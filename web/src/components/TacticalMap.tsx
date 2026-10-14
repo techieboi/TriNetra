@@ -82,7 +82,7 @@ export function TacticalMap(props: Props) {
   const el = useRef<HTMLDivElement>(null);
   const map = useRef<L.Map | null>(null);
   const layers = useRef<Record<GroupKey, L.LayerGroup> | null>(null);
-  const base = useRef<{ dark: L.TileLayer; sat: L.TileLayer } | null>(null);
+  const base = useRef<{ dark: L.LayerGroup; sat: L.TileLayer } | null>(null);
   const driveRef = useRef(drive);
   const cb = useRef(props);
   const fitted = useRef(false);
@@ -98,9 +98,14 @@ export function TacticalMap(props: Props) {
       center: [26.8515, 84.2318], zoom: 15, zoomSnap: 0.25, zoomDelta: 0.5, zoomControl: false, attributionControl: false,
     });
     L.control.zoom({ position: 'topright' }).addTo(m);
-    const dark = L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 19, subdomains: 'abcd' });
-    const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18 });
-    dark.addTo(m);
+    // Esri tiles need no API key (CARTO's dark tiles now return "API key required" watermarks).
+    const esri = (service: string) => `https://server.arcgisonline.com/ArcGIS/rest/services/${service}/MapServer/tile/{z}/{y}/{x}`;
+    const dark = L.layerGroup([
+      L.tileLayer(esri('Canvas/World_Dark_Gray_Base'), { maxZoom: 19, maxNativeZoom: 16 }),
+      L.tileLayer(esri('Canvas/World_Dark_Gray_Reference'), { maxZoom: 19, maxNativeZoom: 16 }),
+    ]);
+    const sat = L.tileLayer(esri('World_Imagery'), { maxZoom: 19, maxNativeZoom: 18 });
+    sat.addTo(m);
     base.current = { dark, sat };
     const keys: GroupKey[] = ['border', 'zones', 'das', 'wedges', 'bop', 'radar', 'nodes', 'alerts', 'threat', 'drone', 'drive'];
     layers.current = Object.fromEntries(keys.map((k) => [k, L.layerGroup().addTo(m)])) as Record<GroupKey, L.LayerGroup>;
@@ -392,7 +397,7 @@ export function TacticalMap(props: Props) {
       {props.children}
       <div className="map-foot">
         {cursor && <span className="map-cursor">{cursor}</span>}
-        <span>Tiles © CARTO · Esri · Sensor feeds simulated</span>
+        <span>Tiles © Esri · Sensor feeds simulated</span>
       </div>
       {drive.enabled && <div className="drive-hint">Click the map to place a target · drag it to move</div>}
     </div>

@@ -88,7 +88,7 @@ Then click the alert (on the map or in the ticker) and open **Details →**:
 4. **Confirm**, **Track**, **Need info**, or **Dismiss / Escalate** (note required). A dismissal lowers the score of similar future events.
 5. The alert queue and **Shift briefing** track **alert time** (radar trigger to dashboard) and the **false-alarm rate** (dismissed / decided). **Audit trail** (☰ menu) shows every step.
 
-Hotkeys: `M` dark map, `S` satellite, `Esc` closes the card, then the panel.
+Hotkeys: `S` satellite (default), `M` dark map, `Esc` closes the card, then the panel.
 
 ### Virtual radar node (stands in for the hardware)
 

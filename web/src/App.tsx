@@ -37,7 +37,7 @@ export default function App() {
   const [notice, setNotice] = useState<string | null>(null);
   const [drive, setDrive] = useState<DriveSettings>({ enabled: false, kind: 'person', count: 2, clock: 'night' });
   const [layers, setLayers] = useState<LayerVisibility>(DEFAULT_LAYERS);
-  const [baseLayer, setBaseLayer] = useState<BaseLayer>('map');
+  const [baseLayer, setBaseLayer] = useState<BaseLayer>('satellite');
   const [recenter, setRecenter] = useState(0);
   const [liveAt, setLiveAt] = useState(0);
 
