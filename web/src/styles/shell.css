@@ -764,15 +764,22 @@ button { font: inherit; color: inherit; }
   box-shadow: var(--shadow);
   overflow: hidden;
   animation: mp-in 0.22s var(--ease);
-  transition: width 0.22s var(--ease);
 }
-.mini-player.big { width: min(720px, calc(100vw - 480px)); }
+.mini-player.dragging { box-shadow: 0 18px 50px rgba(0, 0, 0, 0.7); opacity: 0.96; }
+.mini-player.dragging .mp-head { cursor: grabbing; }
 @keyframes mp-in { from { opacity: 0; transform: translate(-12px, -6px) scale(0.97); } }
-.mp-head { display: flex; align-items: center; gap: 8px; padding: 7px 6px 7px 10px; }
+.mp-head { display: flex; align-items: center; gap: 8px; padding: 7px 6px 7px 10px; cursor: grab; touch-action: none; user-select: none; }
 .mp-kind { font-size: 10px; font-weight: 800; letter-spacing: 0.6px; padding: 2px 6px; border-radius: 4px; background: rgba(251, 146, 60, 0.18); color: #fdba74; flex-shrink: 0; }
-.kind-drone .mp-kind { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
-.kind-cctv .mp-kind { background: rgba(148, 163, 184, 0.2); color: #e2e8f0; }
-.kind-night .mp-kind { background: rgba(74, 222, 128, 0.16); color: #86efac; }
+.kind-drone .mp-kind, .mp-kind.kind-drone { background: rgba(239, 68, 68, 0.2); color: #fca5a5; }
+.kind-cctv .mp-kind, .mp-kind.kind-cctv { background: rgba(148, 163, 184, 0.2); color: #e2e8f0; }
+.kind-night .mp-kind, .mp-kind.kind-night { background: rgba(74, 222, 128, 0.16); color: #86efac; }
+
+/* full-screen view of a feed */
+.mp-full-sub { font-size: 12px; color: var(--text-dim); font-weight: 400; }
+.full-feed { padding: 0 12px; }
+.full-feed .mp-video { border-radius: 6px; overflow: hidden; }
+.full-feed .mp-live { font-size: 11px; left: 12px; bottom: 12px; }
+.full-feed-foot { padding: 10px 14px 14px; font-size: 12px; color: var(--text-dim); }
 .mp-titles { flex: 1; min-width: 0; display: flex; flex-direction: column; line-height: 1.25; }
 .mp-title { font-size: 12.5px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .mp-sub { font-size: 11px; color: var(--text-dim); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -830,10 +837,13 @@ button { font: inherit; color: inherit; }
 
 @media (max-width: 720px) {
   /* phones: a compact player in the strip of map left above the bottom sheet */
-  .mini-player, .mini-player.big { top: 10px; left: 10px; width: 58vw; z-index: 1010; }
-  .mini-player .mp-btn.text, .mini-player .mp-btn[aria-label$="player"]:not([aria-label="Close player"]) { display: none; }
+  .mini-player { top: 10px; left: 10px; width: 58vw; z-index: 1010; }
+  .mini-player .mp-btn.text { display: none; }
   .mp-head { padding: 5px 4px 5px 8px; gap: 6px; }
   .mp-sub { display: none; }
   .mp-video .clip-placeholder-text, .mp-video .cam-corner-tags { display: none; }
   .stage.drawer-open .live-pipeline { left: 50%; width: calc(100% - 20px); }
 }
+
+/* dialogs (full-screen feed, notes, audit) sit above the navbar, ticker and drawer */
+.c2-modal-backdrop { z-index: 2000; }

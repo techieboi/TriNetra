@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import type { Alert, NodeStatus, Zone } from '../types';
 import type { OperatorActionName } from '../lib/api';
 import { heading, istClock, pct, relativeTime, targetLabel } from '../lib/format';
@@ -20,9 +20,11 @@ interface Props {
   droneInFlight: boolean;
   /** Reopens the drone feed; absent when there is no feed to show (e.g. after a reload). */
   onViewDrone?: () => void;
-  /** Plays this alert's camera in the mini player. */
+  /** Opens this alert's camera full-screen (it drops to the mini player when closed). */
   onOpenCamera: () => void;
+  /** True while this alert's camera is in the full-screen or mini player. */
   cameraPoppedOut: boolean;
+  onTab?: (tab: Tab) => void;
 }
 
 const ML_OUTLIER = 65;
@@ -42,8 +44,9 @@ const TABS: { key: Tab; label: string }[] = [
 ];
 
 /** Full alert details, split into tabs so the drawer never becomes one long wall. Render with key={alert_id}. */
-export function ThreatPanel({ alert, zone, nodes, now, onAction, onNoteAction, onDrone, droneInFlight, onViewDrone, onOpenCamera, cameraPoppedOut }: Props) {
+export function ThreatPanel({ alert, zone, nodes, now, onAction, onNoteAction, onDrone, droneInFlight, onViewDrone, onOpenCamera, cameraPoppedOut, onTab }: Props) {
   const [tab, setTab] = useState<Tab>('summary');
+  useEffect(() => onTab?.(tab), [tab]); // eslint-disable-line react-hooks/exhaustive-deps
   if (!alert) {
     return (
       <div className="c2-panel panel-threat-c2 empty">
@@ -198,7 +201,7 @@ export function ThreatPanel({ alert, zone, nodes, now, onAction, onNoteAction, o
               </div>
             </div>
             {cameraPoppedOut ? (
-              <div className="popped-out">Playing in the mini player</div>
+              <div className="popped-out">Playing in the video player</div>
             ) : (
               <>
                 <CameraFeed
@@ -211,7 +214,7 @@ export function ThreatPanel({ alert, zone, nodes, now, onAction, onNoteAction, o
                   onClick={onOpenCamera}
                 />
                 <button className="btn popout-btn" onClick={onOpenCamera}>
-                  <Icon name="playCircle" size={14} /> Play in mini player
+                  <Icon name="expand" size={14} /> Full screen
                 </button>
               </>
             )}

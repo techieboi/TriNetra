@@ -19,7 +19,7 @@ import { SensorLog } from './components/SensorLog';
 import { ThreatPanel } from './components/ThreatPanel';
 import { PipelineStrip } from './components/PipelineStrip';
 import { AuditModal, NoteModal } from './components/Modals';
-import { MiniPlayer, feedKindFor, type Feed } from './components/MiniPlayer';
+import { FeedPlayer, feedKindFor, type Feed, type FeedMode } from './components/MiniPlayer';
 
 type ModalState =
   | { kind: 'audit'; entries: AuditEntry[] }
@@ -34,6 +34,7 @@ export default function App() {
   const now = useNow(1000);
   const [modal, setModal] = useState<ModalState>(null);
   const [feed, setFeed] = useState<Feed | null>(null);
+  const [feedMode, setFeedMode] = useState<FeedMode>('full');
   const [notice, setNotice] = useState<string | null>(null);
   const [drive, setDrive] = useState<DriveSettings>({ enabled: false, kind: 'person', count: 2, clock: 'night' });
   const [layers, setLayers] = useState<LayerVisibility>(DEFAULT_LAYERS);
@@ -66,13 +67,13 @@ export default function App() {
   // Esc closes the innermost thing first: modal (handled by the modal), then the click card, then the drawer.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
-      if (e.key !== 'Escape' || modal) return;
+      if (e.key !== 'Escape' || modal || (feed && feedMode === 'full')) return;
       if (popup) dispatch({ type: 'close', what: 'popup' });
       else if (panel) dispatch({ type: 'close', what: 'panel' });
     };
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
-  }, [popup, panel, modal, dispatch]);
+  }, [popup, panel, modal, feed, feedMode, dispatch]);
 
   const openPanel = useCallback((p: Panel) => dispatch({ type: 'openPanel', panel: p }), [dispatch]);
   const openAlert = useCallback((id: string) => dispatch({ type: 'openPopup', popup: { kind: 'alert', id } }), [dispatch]);
@@ -130,17 +131,26 @@ export default function App() {
       alertId: d.alert_id,
     };
     droneFeeds.current[d.alert_id] = f;
-    setFeed(f);
+    showFeed(f, 'full');
   }, [state.drone, dispatch]);
 
-  // A new alert with footage pops its camera into the player (unless a drone is being watched).
-  const freshId = state.freshAlert?.id;
+  const showFeed = (f: Feed, mode: FeedMode) => {
+    setFeed(f);
+    setFeedMode(mode);
+  };
+
+  // Which tab each open alert panel is on, so leaving a panel mid-video can hand the camera to the mini player.
+  const panelTabs = useRef<Record<string, string>>({});
+  const prevPanel = useRef(panel);
   useEffect(() => {
-    const a = state.alerts.find((x) => x.alert_id === freshId);
-    if (!a || !(a.video_url || a.snapshot)) return;
-    setFeed((cur) => (cur?.kind === 'drone' ? cur : cameraFeed(a)));
+    const prev = prevPanel.current;
+    prevPanel.current = panel;
+    if (prev?.kind !== 'alert' || (panel?.kind === 'alert' && panel.id === prev.id)) return;
+    const watching = panelTabs.current[prev.id] === 'evidence';
+    const a = state.alerts.find((x) => x.alert_id === prev.id);
+    if (watching && a && feed?.key !== `cam-${a.alert_id}`) showFeed(cameraFeed(a), 'mini');
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [freshId]);
+  }, [panel]);
 
   // ---- click card ----
   let popupAt: [number, number] | null = null;
@@ -201,8 +211,9 @@ export default function App() {
           onNoteAction={(action) => setModal({ kind: 'note', action, alertId: a.alert_id })}
           onDrone={() => api.drone(a.alert_id).catch((e) => setNotice((e as Error).message))}
           droneInFlight={state.drone?.alert_id === a.alert_id}
-          onViewDrone={droneFeeds.current[a.alert_id] && (() => setFeed(droneFeeds.current[a.alert_id]))}
-          onOpenCamera={() => setFeed(cameraFeed(a))}
+          onViewDrone={droneFeeds.current[a.alert_id] && (() => showFeed(droneFeeds.current[a.alert_id], 'full'))}
+          onOpenCamera={() => showFeed(cameraFeed(a), 'full')}
+          onTab={(tab) => { panelTabs.current[a.alert_id] = tab; }}
           cameraPoppedOut={feed?.key === `cam-${a.alert_id}`}
         />
       );
@@ -330,7 +341,15 @@ export default function App() {
           onPanel={openPanel}
         />
 
-        {feed && <MiniPlayer feed={feed} onClose={() => setFeed(null)} onOpenAlert={(id) => openPanel({ kind: 'alert', id })} />}
+        {feed && (
+          <FeedPlayer
+            feed={feed}
+            mode={feedMode}
+            onMode={setFeedMode}
+            onClose={() => setFeed(null)}
+            onOpenAlert={(id) => openPanel({ kind: 'alert', id })}
+          />
+        )}
 
         <Drawer
           open={!!panel}
