@@ -48,6 +48,17 @@ Open **http://localhost:8000**. API docs are at `/docs`.
 
 > Windows tip: if `shapely` fails with "filename too long", the project path is too deep. Create the venv in a short path (e.g. `C:\venvs\trinetra`).
 
+### Deploy (Render)
+
+TriNetra is one long-running server (background engine loop, in-memory state, WebSocket push), so it needs a host
+that keeps a process running. Serverless platforms such as Vercel don't, and the live demo breaks there.
+
+1. In Render: **New → Blueprint**, pick this repo. `render.yaml` + `Dockerfile` do the rest (builds the dashboard, then runs uvicorn).
+2. Keep it at **one instance**. A redeploy or restart resets the demo to its reference state.
+3. The free plan sleeps after ~15 min idle (first load then takes 30–60 s). Open the page a few minutes before presenting, or switch `plan` to `starter`.
+
+The same `Dockerfile` works on Railway or Fly.io.
+
 ---
 
 ## Demo walkthrough
