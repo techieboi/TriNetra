@@ -15,6 +15,10 @@ interface Props {
   onAction: (action: OperatorActionName) => void;
   onNoteAction: (action: 'dismiss' | 'escalate') => void;
   onDrone: () => void;
+  /** True while DR-02 is still flying to this alert. */
+  droneInFlight: boolean;
+  /** Reopens the drone feed; absent when there is no feed to show (e.g. after a reload). */
+  onViewDrone?: () => void;
   onOpenCamera: () => void;
 }
 
@@ -35,7 +39,7 @@ const TABS: { key: Tab; label: string }[] = [
 ];
 
 /** Full alert details, split into tabs so the drawer never becomes one long wall. Render with key={alert_id}. */
-export function ThreatPanel({ alert, zone, nodes, now, onAction, onNoteAction, onDrone, onOpenCamera }: Props) {
+export function ThreatPanel({ alert, zone, nodes, now, onAction, onNoteAction, onDrone, droneInFlight, onViewDrone, onOpenCamera }: Props) {
   const [tab, setTab] = useState<Tab>('summary');
   if (!alert) {
     return (
@@ -56,6 +60,39 @@ export function ThreatPanel({ alert, zone, nodes, now, onAction, onNoteAction, o
   const outcome = DECIDED.includes(alert.status) ? [...alert.actions].reverse().find((x) => x.action === DECISION[alert.status]) ?? alert.actions[alert.actions.length - 1] ?? { operator: 'Operator', ts: '', note: '' } : null;
   const ml = alert.ml_score;
   const created = new Date(alert.created_at);
+  const droneArrived = droneSent && !droneInFlight;
+
+  // Whatever the main buttons don't cover. Once the drone is up, Escalate is a main button and Confirm moves here.
+  const moreMenu = (
+    <Popover
+      trigger={(open, toggle) => (
+        <button className={`btn btn-more ${open ? 'on' : ''}`} onClick={toggle} aria-label="More actions">⋯</button>
+      )}
+    >
+      {(close) => (
+        <div className="menu">
+          {droneArrived ? (
+            <button className="menu-item" onClick={() => { onAction('confirm'); close(); }}>
+              <span className="mi-label mi-stack"><span>Confirm threat</span><span className="mi-sub">Respond per SOP</span></span>
+            </button>
+          ) : (
+            <button className="menu-item" onClick={() => { onNoteAction('escalate'); close(); }}>
+              <span className="mi-label mi-stack"><span>Escalate</span><span className="mi-sub">Hand to sector command · note required</span></span>
+            </button>
+          )}
+          {alert.status === 'tracked' ? (
+            <button className="menu-item" onClick={() => { onAction('need_info'); close(); }}>
+              <span className="mi-label mi-stack"><span>Stop tracking</span><span className="mi-sub">Back to the review queue</span></span>
+            </button>
+          ) : (
+            <button className="menu-item" onClick={() => { onAction('track'); close(); }}>
+              <span className="mi-label mi-stack"><span>Keep tracking</span><span className="mi-sub">Leave open and watch for more</span></span>
+            </button>
+          )}
+        </div>
+      )}
+    </Popover>
+  );
 
   return (
     <div className="c2-panel panel-threat-c2">
@@ -110,35 +147,34 @@ export function ThreatPanel({ alert, zone, nodes, now, onAction, onNoteAction, o
               </span>
               {outcome.note && <span className="outcome-note">“{outcome.note}”</span>}
             </div>
+          ) : droneArrived ? (
+            <div className="decide-prompt">
+              <div className="decide-text">
+                <span className="decide-title">Drone is on station · what did it see?</span>
+                <span className="decide-sub">
+                  Decide now so {alert.bop_id} knows whether to move.
+                  {onViewDrone && <> <button className="link-btn" onClick={onViewDrone}>View drone feed</button></>}
+                </span>
+              </div>
+              <div className="decide-btns">
+                <button className="btn btn-escalate" onClick={() => onNoteAction('escalate')}>Escalate</button>
+                <button className="btn btn-dismiss" onClick={() => onNoteAction('dismiss')}>Dismiss as normal</button>
+                {moreMenu}
+              </div>
+            </div>
           ) : (
             <div className="action-row">
               <button className="btn btn-confirm" onClick={() => onAction('confirm')}>Confirm threat</button>
               <button className="btn" onClick={() => onNoteAction('dismiss')}>Dismiss</button>
-              <button className="btn" disabled={droneSent} onClick={onDrone} title={`Send DR-02 from ${alert.bop_id} for a visual check (simulated flight)`}>
-                {droneSent ? 'Drone sent ✓' : 'Send drone'}
-              </button>
-              <Popover
-                trigger={(open, toggle) => (
-                  <button className={`btn btn-more ${open ? 'on' : ''}`} onClick={toggle} aria-label="More actions">⋯</button>
-                )}
+              <button
+                className={`btn ${droneInFlight ? 'in-flight' : ''}`}
+                disabled={droneSent}
+                onClick={onDrone}
+                title={`Send DR-02 from ${alert.bop_id} for a visual check (simulated flight)`}
               >
-                {(close) => (
-                  <div className="menu">
-                    <button className="menu-item" onClick={() => { onNoteAction('escalate'); close(); }}>
-                      <span className="mi-label mi-stack"><span>Escalate</span><span className="mi-sub">Hand to sector command · note required</span></span>
-                    </button>
-                    {alert.status === 'tracked' ? (
-                      <button className="menu-item" onClick={() => { onAction('need_info'); close(); }}>
-                        <span className="mi-label mi-stack"><span>Stop tracking</span><span className="mi-sub">Back to the review queue</span></span>
-                      </button>
-                    ) : (
-                      <button className="menu-item" onClick={() => { onAction('track'); close(); }}>
-                        <span className="mi-label mi-stack"><span>Keep tracking</span><span className="mi-sub">Leave open and watch for more</span></span>
-                      </button>
-                    )}
-                  </div>
-                )}
-              </Popover>
+                {droneInFlight ? 'Drone en route…' : 'Send drone'}
+              </button>
+              {moreMenu}
             </div>
           )}
         </>

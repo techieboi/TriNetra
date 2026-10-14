@@ -24,7 +24,7 @@ type ModalState =
   | { kind: 'camera' }
   | { kind: 'audit'; entries: AuditEntry[] }
   | { kind: 'note'; action: 'dismiss' | 'escalate'; alertId: string }
-  | { kind: 'drone'; videoUrl: string | null; snapshot: string }
+  | { kind: 'drone'; alertId: string; videoUrl: string | null; snapshot: string }
   | null;
 
 const LIVE_TOAST_MS = 8000;
@@ -95,10 +95,14 @@ export default function App() {
     }
   };
 
+  // Drone feeds by alert, so the decision prompt can reopen one after its popup is closed.
+  const droneFeeds = useRef<Record<string, { videoUrl: string | null; snapshot: string }>>({});
   const onDroneArrived = useCallback(() => {
     const d = state.drone;
     dispatch({ type: 'droneDone' });
-    if (d) setModal({ kind: 'drone', videoUrl: d.video_url, snapshot: d.snapshot });
+    if (!d) return;
+    droneFeeds.current[d.alert_id] = { videoUrl: d.video_url, snapshot: d.snapshot };
+    setModal({ kind: 'drone', alertId: d.alert_id, videoUrl: d.video_url, snapshot: d.snapshot });
   }, [state.drone, dispatch]);
 
   // ---- click card ----
@@ -159,6 +163,8 @@ export default function App() {
           onAction={(action) => act(a.alert_id, action)}
           onNoteAction={(action) => setModal({ kind: 'note', action, alertId: a.alert_id })}
           onDrone={() => api.drone(a.alert_id).catch((e) => setNotice((e as Error).message))}
+          droneInFlight={state.drone?.alert_id === a.alert_id}
+          onViewDrone={droneFeeds.current[a.alert_id] && (() => setModal({ kind: 'drone', alertId: a.alert_id, ...droneFeeds.current[a.alert_id] }))}
           onOpenCamera={() => setModal({ kind: 'camera' })}
         />
       );
@@ -190,6 +196,11 @@ export default function App() {
     subtitle = zone?.name;
     body = <Briefing zone={zone} metrics={state.metrics} alerts={state.alerts} nodes={nodes} />;
   }
+
+  const undecided = (id: string) => {
+    const s = state.alerts.find((x) => x.alert_id === id)?.status;
+    return s === 'open' || s === 'tracked';
+  };
 
   const live = state.latestIncident;
   const showLive = live && now - liveAt < LIVE_TOAST_MS;
@@ -293,7 +304,14 @@ export default function App() {
 
       {modal?.kind === 'camera' && selected && <CameraModal alert={selected} onClose={() => setModal(null)} />}
       {modal?.kind === 'audit' && <AuditModal entries={modal.entries} onClose={() => setModal(null)} />}
-      {modal?.kind === 'drone' && <DroneModal videoUrl={modal.videoUrl} snapshot={modal.snapshot} onClose={() => setModal(null)} />}
+      {modal?.kind === 'drone' && (
+        <DroneModal
+          videoUrl={modal.videoUrl}
+          snapshot={modal.snapshot}
+          onClose={() => setModal(null)}
+          onDecide={undecided(modal.alertId) ? (action) => setModal({ kind: 'note', action, alertId: modal.alertId }) : undefined}
+        />
+      )}
       {modal?.kind === 'note' && (
         <NoteModal
           action={modal.action}
