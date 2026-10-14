@@ -69,6 +69,7 @@ The dashboard opens on just the map of zone G2, a slim navbar and a **LIVE** hea
 - **Click a headline** in the ticker to jump to that alert or node.
 - Navbar: **Layers** (overlays, dark/satellite), **time range**, **re-centre**, **🔔 alert queue**, **Demo**, **resync**, and **☰** for shift briefing, sensor health, activity log and audit trail.
 - The pill at the bottom left (link · nodes online · open alerts) opens the matching list.
+- **Video feeds** (node thermal cameras, the drone; CCTV and night vision use the same player) play in a **mini player** at the top left of the map: it pops up for a new alert with footage, when the drone arrives, or from **Play in mini player**. ⤢ enlarges it, **Open alert** jumps to its alert.
 
 Open **Demo ▾** in the navbar.
 
@@ -83,8 +84,8 @@ Open **Demo ▾** in the navbar.
 
 Then click the alert (on the map or in the ticker) and open **Details →**:
 1. **Summary** has the **pipeline strip** (which step decided what) and the decision buttons; **Why this score** lists every factor and weight.
-2. **Camera & radar** has the **camera tile** (looping prerecorded clip, or a placeholder until clips are added) and the **radar scope**.
-3. **Send drone**: operator click only; the drone flies from BOP-1 ("Drone en route…") and the drone feed opens. Once it is on station a highlighted prompt in the alert panel asks you to **Escalate** or **Dismiss as normal**.
+2. **Camera & radar** has the **camera tile** (looping prerecorded clip, or a placeholder until clips are added; click it to pop it into the mini player) and the **radar scope**.
+3. **Send drone**: operator click only; the drone flies from BOP-1 ("Drone en route…") and its feed opens in the mini player. Once it is on station a highlighted prompt in the alert panel asks you to **Escalate** or **Dismiss as normal**.
 4. **Confirm threat** or **Dismiss** (note required); **⋯** holds **Escalate** (note required) and **Keep tracking**. Once decided, the buttons give way to one line saying who decided what. A dismissal lowers the score of similar future events.
 5. The alert queue and **Shift briefing** track **alert time** (radar trigger to dashboard) and the **false-alarm rate** (dismissed / decided). **Audit trail** (☰ menu) shows every step.
 

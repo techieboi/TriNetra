@@ -78,10 +78,10 @@ export function CameraFeed({ videoUrl, detectionsUrl, snapshot, boxes, label, ca
         />
       ) : (
         <div className="clip-placeholder">
-          {snapshot && <img src={snapshot} alt="Last thermal frame" className="cam-live-img dimmed" />}
+          {snapshot && <img src={snapshot} alt="Last recorded frame" className="cam-live-img dimmed" />}
           <div className="clip-placeholder-text">
             <span className="clip-icon">▶</span>
-            <span>Recorded thermal clip · pending</span>
+            <span>Recorded clip · pending</span>
             <span className="clip-sub">{snapshot ? 'showing last frame' : 'no frame for this alert yet'}</span>
           </div>
         </div>

@@ -1,7 +1,6 @@
 import { useEffect, useState } from 'react';
-import type { Alert, AuditEntry } from '../types';
+import type { AuditEntry } from '../types';
 import { istClock } from '../lib/format';
-import { CameraFeed } from './CameraFeed';
 
 interface ModalProps {
   title: React.ReactNode;
@@ -27,46 +26,6 @@ export function Modal({ title, onClose, width = 820, children }: ModalProps) {
         <div className="c2-modal-body">{children}</div>
       </div>
     </div>
-  );
-}
-
-export function CameraModal({ alert, onClose }: { alert: Alert; onClose: () => void }) {
-  return (
-    <Modal title={<><span className="cam-tag">{alert.camera ?? 'CAM'}</span><span>Thermal · {alert.primary_node} · {alert.alert_id}</span></>} onClose={onClose}>
-      <div className="cam-feed-wrapper">
-        <CameraFeed large videoUrl={alert.video_url} detectionsUrl={alert.detections_url} snapshot={alert.snapshot} boxes={alert.bounding_boxes} label={alert.detected_class} />
-        <div className="cam-telemetry-overlay">
-          <div className="cam-ov-top">
-            <span>HDG {alert.heading_deg != null ? `${Math.round(alert.heading_deg)}°` : '—'} · RNG {alert.radar_track.at(-1)?.range_m.toFixed(0) ?? '—'} m</span>
-            <span>WHITE-HOT · PRERECORDED</span>
-          </div>
-          <div className="cam-ov-bottom">
-            <span className="yolo-box-tag">{alert.detected_class ?? 'No confirmed target'}</span>
-            <span>REC ● {istClock()} IST</span>
-          </div>
-        </div>
-      </div>
-    </Modal>
-  );
-}
-
-export function DroneModal({ videoUrl, snapshot, onClose }: { videoUrl: string | null; snapshot: string; onClose: () => void }) {
-  return (
-    <Modal title={<><span className="cam-tag" style={{ background: '#ef4444', color: '#fff' }}>DR-02</span><span>Drone visual check · thermal</span></>} onClose={onClose}>
-      <div className="cam-feed-wrapper">
-        <CameraFeed large videoUrl={videoUrl} detectionsUrl={null} snapshot={snapshot} boxes={null} label={null} />
-        <div className="cam-telemetry-overlay">
-          <div className="cam-ov-top">
-            <span>ALT 85 m AGL · ZOOM 4.2x</span>
-            <span style={{ color: '#ef4444', fontWeight: 700 }}>SIMULATED DRONE CHECK</span>
-          </div>
-          <div className="cam-ov-bottom">
-            <span className="yolo-box-tag">On station over alert location</span>
-            <span>Sent by operator</span>
-          </div>
-        </div>
-      </div>
-    </Modal>
   );
 }
 

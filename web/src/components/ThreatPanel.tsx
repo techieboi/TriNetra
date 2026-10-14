@@ -6,6 +6,7 @@ import { CameraFeed } from './CameraFeed';
 import { PipelineStrip } from './PipelineStrip';
 import { RadarScope } from './RadarScope';
 import { Popover } from './Popover';
+import { Icon } from './Icon';
 
 interface Props {
   alert: Alert | null;
@@ -19,7 +20,9 @@ interface Props {
   droneInFlight: boolean;
   /** Reopens the drone feed; absent when there is no feed to show (e.g. after a reload). */
   onViewDrone?: () => void;
+  /** Plays this alert's camera in the mini player. */
   onOpenCamera: () => void;
+  cameraPoppedOut: boolean;
 }
 
 const ML_OUTLIER = 65;
@@ -39,7 +42,7 @@ const TABS: { key: Tab; label: string }[] = [
 ];
 
 /** Full alert details, split into tabs so the drawer never becomes one long wall. Render with key={alert_id}. */
-export function ThreatPanel({ alert, zone, nodes, now, onAction, onNoteAction, onDrone, droneInFlight, onViewDrone, onOpenCamera }: Props) {
+export function ThreatPanel({ alert, zone, nodes, now, onAction, onNoteAction, onDrone, droneInFlight, onViewDrone, onOpenCamera, cameraPoppedOut }: Props) {
   const [tab, setTab] = useState<Tab>('summary');
   if (!alert) {
     return (
@@ -194,15 +197,24 @@ export function ThreatPanel({ alert, zone, nodes, now, onAction, onNoteAction, o
                 )}
               </div>
             </div>
-            <CameraFeed
-              videoUrl={alert.video_url}
-              detectionsUrl={alert.detections_url}
-              snapshot={alert.snapshot}
-              boxes={alert.bounding_boxes}
-              label={alert.detected_class}
-              cameraState={camState}
-              onClick={onOpenCamera}
-            />
+            {cameraPoppedOut ? (
+              <div className="popped-out">Playing in the mini player</div>
+            ) : (
+              <>
+                <CameraFeed
+                  videoUrl={alert.video_url}
+                  detectionsUrl={alert.detections_url}
+                  snapshot={alert.snapshot}
+                  boxes={alert.bounding_boxes}
+                  label={alert.detected_class}
+                  cameraState={camState}
+                  onClick={onOpenCamera}
+                />
+                <button className="btn popout-btn" onClick={onOpenCamera}>
+                  <Icon name="playCircle" size={14} /> Play in mini player
+                </button>
+              </>
+            )}
           </div>
           <RadarScope track={alert.radar_track} radar={node?.radar} nodeId={alert.primary_node} />
         </>

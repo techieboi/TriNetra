@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import type { AuditEntry } from './types';
+import type { Alert, AuditEntry } from './types';
 import { useLiveState, type Panel } from './lib/store';
 import { useNow } from './lib/useNow';
 import { api, type OperatorActionName } from './lib/api';
-import { inRange, isActive } from './lib/format';
+import { inRange, isActive, targetLabel } from './lib/format';
 import { NavBar } from './components/NavBar';
 import { HeadlineTicker } from './components/HeadlineTicker';
 import { StatusPill } from './components/StatusPill';
@@ -18,13 +18,12 @@ import { SensorHealth } from './components/SensorHealth';
 import { SensorLog } from './components/SensorLog';
 import { ThreatPanel } from './components/ThreatPanel';
 import { PipelineStrip } from './components/PipelineStrip';
-import { AuditModal, CameraModal, DroneModal, NoteModal } from './components/Modals';
+import { AuditModal, NoteModal } from './components/Modals';
+import { MiniPlayer, feedKindFor, type Feed } from './components/MiniPlayer';
 
 type ModalState =
-  | { kind: 'camera' }
   | { kind: 'audit'; entries: AuditEntry[] }
   | { kind: 'note'; action: 'dismiss' | 'escalate'; alertId: string }
-  | { kind: 'drone'; alertId: string; videoUrl: string | null; snapshot: string }
   | null;
 
 const LIVE_TOAST_MS = 8000;
@@ -34,6 +33,7 @@ export default function App() {
   const [state, dispatch, resync] = useLiveState();
   const now = useNow(1000);
   const [modal, setModal] = useState<ModalState>(null);
+  const [feed, setFeed] = useState<Feed | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [drive, setDrive] = useState<DriveSettings>({ enabled: false, kind: 'person', count: 2, clock: 'night' });
   const [layers, setLayers] = useState<LayerVisibility>(DEFAULT_LAYERS);
@@ -42,7 +42,6 @@ export default function App() {
   const [liveAt, setLiveAt] = useState(0);
 
   const { zone, nodes, popup, panel } = state;
-  const selected = state.alerts.find((a) => a.alert_id === state.selectedId) ?? null;
   const serverNow = now / 1000 + state.serverOffset;
   const shownAlerts = state.alerts.filter((a) => inRange(a.created_at, state.timeRange, now));
   const active = shownAlerts.filter((a) => isActive(a.status));
@@ -95,15 +94,53 @@ export default function App() {
     }
   };
 
-  // Drone feeds by alert, so the decision prompt can reopen one after its popup is closed.
-  const droneFeeds = useRef<Record<string, { videoUrl: string | null; snapshot: string }>>({});
+  /** The alert's own camera clip, as a mini-player feed. */
+  const cameraFeed = useCallback((a: Alert): Feed => {
+    const node = zone?.nodes.find((n) => n.id === a.primary_node);
+    return {
+      key: `cam-${a.alert_id}`,
+      kind: feedKindFor(node?.sensors ?? []),
+      title: `${a.camera ?? 'Camera'} · ${node?.name ?? a.primary_node}`,
+      subtitle: `${a.alert_id} · ${targetLabel(a.detected_class, a.detected_count)}`,
+      videoUrl: a.video_url,
+      detectionsUrl: a.detections_url,
+      snapshot: a.snapshot,
+      boxes: a.bounding_boxes,
+      label: a.detected_class,
+      alertId: a.alert_id,
+    };
+  }, [zone]);
+
+  // Drone feeds by alert, so the decision prompt can bring one back after the player is closed.
+  const droneFeeds = useRef<Record<string, Feed>>({});
   const onDroneArrived = useCallback(() => {
     const d = state.drone;
     dispatch({ type: 'droneDone' });
     if (!d) return;
-    droneFeeds.current[d.alert_id] = { videoUrl: d.video_url, snapshot: d.snapshot };
-    setModal({ kind: 'drone', alertId: d.alert_id, videoUrl: d.video_url, snapshot: d.snapshot });
+    const f: Feed = {
+      key: `drone-${d.alert_id}`,
+      kind: 'drone',
+      title: 'DR-02 · on station',
+      subtitle: `Over ${d.alert_id} · 85 m AGL · simulated flight`,
+      videoUrl: d.video_url,
+      detectionsUrl: null,
+      snapshot: d.snapshot,
+      boxes: null,
+      label: null,
+      alertId: d.alert_id,
+    };
+    droneFeeds.current[d.alert_id] = f;
+    setFeed(f);
   }, [state.drone, dispatch]);
+
+  // A new alert with footage pops its camera into the player (unless a drone is being watched).
+  const freshId = state.freshAlert?.id;
+  useEffect(() => {
+    const a = state.alerts.find((x) => x.alert_id === freshId);
+    if (!a || !(a.video_url || a.snapshot)) return;
+    setFeed((cur) => (cur?.kind === 'drone' ? cur : cameraFeed(a)));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [freshId]);
 
   // ---- click card ----
   let popupAt: [number, number] | null = null;
@@ -164,8 +201,9 @@ export default function App() {
           onNoteAction={(action) => setModal({ kind: 'note', action, alertId: a.alert_id })}
           onDrone={() => api.drone(a.alert_id).catch((e) => setNotice((e as Error).message))}
           droneInFlight={state.drone?.alert_id === a.alert_id}
-          onViewDrone={droneFeeds.current[a.alert_id] && (() => setModal({ kind: 'drone', alertId: a.alert_id, ...droneFeeds.current[a.alert_id] }))}
-          onOpenCamera={() => setModal({ kind: 'camera' })}
+          onViewDrone={droneFeeds.current[a.alert_id] && (() => setFeed(droneFeeds.current[a.alert_id]))}
+          onOpenCamera={() => setFeed(cameraFeed(a))}
+          cameraPoppedOut={feed?.key === `cam-${a.alert_id}`}
         />
       );
     }
@@ -233,7 +271,7 @@ export default function App() {
         onNode={openNode}
       />
 
-      <main className="stage">
+      <main className={`stage ${panel ? 'drawer-open' : ''}`}>
         <TacticalMap
           zone={zone}
           nodes={nodes}
@@ -292,6 +330,8 @@ export default function App() {
           onPanel={openPanel}
         />
 
+        {feed && <MiniPlayer feed={feed} onClose={() => setFeed(null)} onOpenAlert={(id) => openPanel({ kind: 'alert', id })} />}
+
         <Drawer
           open={!!panel}
           title={title}
@@ -303,9 +343,7 @@ export default function App() {
         </Drawer>
       </main>
 
-      {modal?.kind === 'camera' && selected && <CameraModal alert={selected} onClose={() => setModal(null)} />}
       {modal?.kind === 'audit' && <AuditModal entries={modal.entries} onClose={() => setModal(null)} />}
-      {modal?.kind === 'drone' && <DroneModal videoUrl={modal.videoUrl} snapshot={modal.snapshot} onClose={() => setModal(null)} />}
       {modal?.kind === 'note' && (
         <NoteModal
           action={modal.action}
