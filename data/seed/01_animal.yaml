@@ -1,0 +1,6 @@
+# Reference history loaded on start/reset so the dashboard is not empty.
+minutes_ago: 18
+clock: "2026-10-12T23:30:00+05:30"
+events:
+  - {at: 0.0, node: N3, type: radar, range_m: 210, bearing_deg: 60, speed_mps: -0.6, confidence: 0.78}
+  - {at: 2.0, node: N3, type: vision, label: none, count: 0, confidence: 0.0, range_m: 200, bearing_deg: 62, snapshot: "/media/snapshots/thermal_livestock.jpg", clip: animal}

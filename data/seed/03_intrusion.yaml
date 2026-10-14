@@ -1,0 +1,6 @@
+minutes_ago: 2
+clock: "2026-10-12T22:35:00+05:30"
+events:
+  - {at: 0.0, node: N3, type: radar, range_m: 230, bearing_deg: 40, speed_mps: -1.4, confidence: 0.86}
+  - {at: 1.0, node: N3, type: radar, range_m: 200, bearing_deg: 41, speed_mps: -1.3, confidence: 0.88}
+  - {at: 2.8, node: N3, type: vision, label: person, count: 3, confidence: 0.87, heading_deg: 195, range_m: 165, bearing_deg: 42, snapshot: "/media/snapshots/thermal_intrusion_group.jpg", clip: intrusion}

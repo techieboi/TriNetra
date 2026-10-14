@@ -1,12 +1,6 @@
 name: "Node Heartbeat Dropout"
-description: "Simulates sudden telemetry loss on Node Z1-N4 (Delta) to test blind spot detection"
+description: "N4 stops sending heartbeats. The node and its camera go grey on the map and a blind-spot warning is logged."
+expected: "N4 OFFLINE · blind-spot warning"
 clock: "2026-10-12T03:15:00+05:30"
 events:
-  - at: 0.0
-    node: "Z1-N4"
-    type: "heartbeat_timeout"
-    label: "timeout"
-    confidence: 1.0
-    lat: 26.8565
-    lon: 84.2370
-    source: "sim"
+  - {at: 0.0, node: N4, type: heartbeat_timeout, label: timeout, confidence: 1.0}

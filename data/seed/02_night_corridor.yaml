@@ -1,0 +1,6 @@
+minutes_ago: 6
+clock: "2026-10-12T21:50:00+05:30"
+events:
+  - {at: 0.0, node: N2, type: radar, range_m: 110, bearing_deg: 95, speed_mps: -1.1, confidence: 0.85}
+  - {at: 1.0, node: N2, type: radar, range_m: 100, bearing_deg: 96, speed_mps: -1.1, confidence: 0.86}
+  - {at: 2.0, node: N2, type: vision, label: person, count: 1, confidence: 0.84, heading_deg: 270, range_m: 95, bearing_deg: 97, clip: night_corridor}

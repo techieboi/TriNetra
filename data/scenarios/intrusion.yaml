@@ -1,42 +1,30 @@
 name: "Night Intrusion on Forest Track"
-description: "Coordinated stealth movement off-route at 02:40 AM with multi-sensor agreement heading toward interior"
+description: "02:40 · N3 radar picks up a group closing in off-route; CAM 07 wakes and YOLO confirms 3 people and a motorcycle heading into territory. (Track time compressed for the demo.)"
+expected: "HIGH alert · score 100 · routed to BOP-1"
 clock: "2026-10-12T02:40:00+05:30"
 events:
-  - at: 0.0
-    node: "Z1-N3"
-    type: "vibration"
-    label: "footstep"
-    confidence: 0.88
-    lat: 26.8542
-    lon: 84.2288
-    source: "sim"
-  - at: 1.2
-    node: "Z1-N3"
-    type: "pir"
-    label: "motion"
-    confidence: 0.94
-    lat: 26.8542
-    lon: 84.2288
-    source: "sim"
+  - {at: 0.0, node: N3, type: radar, range_m: 230, bearing_deg: 40, speed_mps: -1.4, track_id: T1, confidence: 0.86}
+  - {at: 1.0, node: N3, type: radar, range_m: 205, bearing_deg: 41, speed_mps: -1.3, track_id: T1, confidence: 0.88}
+  - {at: 2.0, node: N3, type: radar, range_m: 180, bearing_deg: 41, speed_mps: -1.3, track_id: T1, confidence: 0.9}
   - at: 2.8
-    node: "Z1-N3"
-    type: "vision"
-    label: "person"
+    node: N3
+    type: vision
+    label: person
     count: 3
     confidence: 0.87
     heading_deg: 195
-    lat: 26.8540
-    lon: 84.2290
-    source: "sim"
-    snapshot: "data/snapshots/thermal_intrusion_group.jpg"
-  - at: 4.0
-    node: "Z1-N3"
-    type: "vision"
-    label: "motorcycle"
+    range_m: 165
+    bearing_deg: 42
+    snapshot: "/media/snapshots/thermal_intrusion_group.jpg"
+    clip: intrusion
+  - {at: 3.5, node: N3, type: radar, range_m: 155, bearing_deg: 42, speed_mps: -1.4, track_id: T1, confidence: 0.9}
+  - at: 4.2
+    node: N3
+    type: vision
+    label: motorcycle
     count: 1
     confidence: 0.81
     heading_deg: 190
-    lat: 26.8538
-    lon: 84.2292
-    source: "sim"
-    snapshot: "data/snapshots/thermal_vehicle.jpg"
+    range_m: 150
+    bearing_deg: 43
+    clip: intrusion

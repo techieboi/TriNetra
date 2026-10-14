@@ -1,5 +1,6 @@
 from datetime import datetime, timezone
 from typing import Dict, Optional, List
+import time
 import uuid
 from app.schema import Event, Incident
 from app.zone import zone_mgr
@@ -11,6 +12,7 @@ class FusionEngine:
     def __init__(self):
         # zone_id -> Incident
         self.active_incidents: Dict[str, Incident] = {}
+        self.last_received: Dict[str, float] = {}
 
     def parse_time(self, ts_str: str) -> float:
         try:
@@ -20,13 +22,13 @@ class FusionEngine:
         except Exception:
             return datetime.now(timezone.utc).timestamp()
 
-    def process_event(self, event: Event) -> Incident:
+    def process_event(self, event: Event, received_at: Optional[float] = None) -> Incident:
         """
-        Groups events in the same zone within the 10-second window and spatial proximity
-        into a single incident.
+        Groups a radar trigger and the camera result that follows it (same zone,
+        10 s window, ~400 m) into one incident.
         """
         zone_key = event.zone_id
-        current_ts = self.parse_time(event.ts)
+        received_at = received_at if received_at is not None else time.time()
         inc = self.active_incidents.get(zone_key)
 
         is_close = False
@@ -34,8 +36,8 @@ class FusionEngine:
 
         if inc and inc.events:
             last_event = inc.events[-1]
-            last_ts = self.parse_time(last_event.ts)
-            time_diff = abs(current_ts - last_ts)
+            # Window on arrival time, so a replayed scenario never merges into the previous run
+            time_diff = received_at - self.last_received.get(zone_key, 0.0)
 
             # Spatial check
             dist_km = zone_mgr.haversine_km(event.lat, event.lon, last_event.lat, last_event.lon)
@@ -43,6 +45,7 @@ class FusionEngine:
             is_fresh = (time_diff <= FUSION_WINDOW_SECONDS)
             is_close = (dist_km <= SPATIAL_PROXIMITY_KM)
 
+        self.last_received[zone_key] = received_at
         if inc and is_fresh and is_close:
             inc.events.append(event)
             if event.node_id not in inc.node_ids:
@@ -58,6 +61,7 @@ class FusionEngine:
                 events=[event],
                 start_ts=event.ts,
                 last_ts=event.ts,
+                received_at=received_at,
                 score=0,
                 band="log",
                 reasons=[],
@@ -68,5 +72,6 @@ class FusionEngine:
 
     def clear(self):
         self.active_incidents.clear()
+        self.last_received.clear()
 
 fusion_engine = FusionEngine()
