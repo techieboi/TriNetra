@@ -197,11 +197,6 @@ export default function App() {
     body = <Briefing zone={zone} metrics={state.metrics} alerts={state.alerts} nodes={nodes} />;
   }
 
-  const undecided = (id: string) => {
-    const s = state.alerts.find((x) => x.alert_id === id)?.status;
-    return s === 'open' || s === 'tracked';
-  };
-
   const live = state.latestIncident;
   const showLive = live && now - liveAt < LIVE_TOAST_MS;
   const fresh = state.freshAlert && now - state.freshAlert.at < FRESH_MS ? state.freshAlert.id : null;
@@ -310,14 +305,7 @@ export default function App() {
 
       {modal?.kind === 'camera' && selected && <CameraModal alert={selected} onClose={() => setModal(null)} />}
       {modal?.kind === 'audit' && <AuditModal entries={modal.entries} onClose={() => setModal(null)} />}
-      {modal?.kind === 'drone' && (
-        <DroneModal
-          videoUrl={modal.videoUrl}
-          snapshot={modal.snapshot}
-          onClose={() => setModal(null)}
-          onDecide={undecided(modal.alertId) ? (action) => setModal({ kind: 'note', action, alertId: modal.alertId }) : undefined}
-        />
-      )}
+      {modal?.kind === 'drone' && <DroneModal videoUrl={modal.videoUrl} snapshot={modal.snapshot} onClose={() => setModal(null)} />}
       {modal?.kind === 'note' && (
         <NoteModal
           action={modal.action}

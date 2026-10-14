@@ -747,9 +747,4 @@ button { font: inherit; color: inherit; }
 .btn-escalate:hover:not(:disabled) { background: #fbbf24; }
 .btn-dismiss { flex: 1; }
 .decide-btns .menu { min-width: 250px; }
-.decide-prompt.in-modal { margin: 12px; flex-direction: row; align-items: center; justify-content: space-between; animation: none; }
-.decide-prompt.in-modal .decide-btns .btn { flex: none; }
 .btn.in-flight { color: #fcd34d; border-color: rgba(245, 158, 11, 0.45); animation: live-blink 1.4s infinite; opacity: 1; }
-@media (max-width: 720px) {
-  .decide-prompt.in-modal { flex-direction: column; align-items: stretch; }
-}

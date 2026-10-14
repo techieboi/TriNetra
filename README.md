@@ -84,7 +84,7 @@ Open **Demo ▾** in the navbar.
 Then click the alert (on the map or in the ticker) and open **Details →**:
 1. **Summary** has the **pipeline strip** (which step decided what) and the decision buttons; **Why this score** lists every factor and weight.
 2. **Camera & radar** has the **camera tile** (looping prerecorded clip, or a placeholder until clips are added) and the **radar scope**.
-3. **Send drone**: operator click only; the drone flies from BOP-1 ("Drone en route…") and the drone feed opens. Once it is on station a highlighted prompt asks you to **Escalate** or **Dismiss as normal**, both in the feed and in the alert panel.
+3. **Send drone**: operator click only; the drone flies from BOP-1 ("Drone en route…") and the drone feed opens. Once it is on station a highlighted prompt in the alert panel asks you to **Escalate** or **Dismiss as normal**.
 4. **Confirm threat** or **Dismiss** (note required); **⋯** holds **Escalate** (note required) and **Keep tracking**. Once decided, the buttons give way to one line saying who decided what. A dismissal lowers the score of similar future events.
 5. The alert queue and **Shift briefing** track **alert time** (radar trigger to dashboard) and the **false-alarm rate** (dismissed / decided). **Audit trail** (☰ menu) shows every step.
 

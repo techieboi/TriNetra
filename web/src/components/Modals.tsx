@@ -50,15 +50,7 @@ export function CameraModal({ alert, onClose }: { alert: Alert; onClose: () => v
   );
 }
 
-interface DroneModalProps {
-  videoUrl: string | null;
-  snapshot: string;
-  onClose: () => void;
-  /** Once the drone is on station the operator owes a decision; offer it right under the feed. */
-  onDecide?: (action: 'escalate' | 'dismiss') => void;
-}
-
-export function DroneModal({ videoUrl, snapshot, onClose, onDecide }: DroneModalProps) {
+export function DroneModal({ videoUrl, snapshot, onClose }: { videoUrl: string | null; snapshot: string; onClose: () => void }) {
   return (
     <Modal title={<><span className="cam-tag" style={{ background: '#ef4444', color: '#fff' }}>DR-02</span><span>Drone visual check · thermal</span></>} onClose={onClose}>
       <div className="cam-feed-wrapper">
@@ -74,18 +66,6 @@ export function DroneModal({ videoUrl, snapshot, onClose, onDecide }: DroneModal
           </div>
         </div>
       </div>
-      {onDecide && (
-        <div className="decide-prompt in-modal">
-          <div className="decide-text">
-            <span className="decide-title">Drone is on station · what did it see?</span>
-            <span className="decide-sub">Both need a short note for the audit trail.</span>
-          </div>
-          <div className="decide-btns">
-            <button className="btn btn-escalate" onClick={() => onDecide('escalate')}>Escalate</button>
-            <button className="btn btn-dismiss" onClick={() => onDecide('dismiss')}>Dismiss as normal</button>
-          </div>
-        </div>
-      )}
     </Modal>
   );
 }
