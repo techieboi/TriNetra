@@ -1,0 +1,9 @@
+# Render Blueprint: New → Blueprint → pick this repo.
+services:
+  - type: web
+    name: trinetra
+    runtime: docker
+    plan: free            # sleeps after ~15 min idle; use "starter" to keep it awake for demos
+    autoDeploy: true
+    healthCheckPath: /api/metrics
+    numInstances: 1       # state is in memory; do not scale out
